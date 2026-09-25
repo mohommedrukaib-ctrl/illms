@@ -1,0 +1,28 @@
+{% load ilims_tags %}
+{% if samples %}
+    {% for s in samples %}
+    <tr>
+        <td>
+            <a href="{% url 'core:sample_detail' s.pk %}" class="text-bold text-brand">
+                <code class="text-mono">{{ s.code }}</code>
+            </a>
+        </td>
+        <td>{{ s.client.name }}</td>
+        <td>{{ s.product_name }}</td>
+        <td>{{ s.product_type.name|default:"—" }}</td>
+        <td>{{ s.received_date|date:"Y-m-d" }}</td>
+        <td>
+            <span class="pill pill--{{ s.state_color }}">
+                {{ s.get_workflow_state_display }}
+            </span>
+        </td>
+        <td class="text-right">
+            <a href="{% url 'core:sample_detail' s.pk %}" class="btn btn--ghost btn--sm">View</a>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="7" class="text-center p-lg text-muted">No samples match your filters.</td>
+    </tr>
+{% endif %}

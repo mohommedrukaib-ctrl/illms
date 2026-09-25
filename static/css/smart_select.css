@@ -1,0 +1,136 @@
+/* ═══════════════════════════════════════════════════════════════
+   ILIMS SmartSelect Widget
+   ═══════════════════════════════════════════════════════════════ */
+
+.smart-select {
+    position: relative;
+    display: block;
+}
+
+.smart-select__input-wrap {
+    position: relative;
+}
+
+.smart-select__text {
+    padding-right: 32px;
+}
+
+.smart-select__actions {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.smart-select__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.smart-select__link:hover {
+    color: var(--brand);
+    text-decoration: underline;
+}
+
+.smart-select__link--create {
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.smart-select__hint {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Results dropdown */
+.smart-select__results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    margin-top: 4px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.smart-select__results:empty {
+    display: none;
+}
+
+.smart-select__list {
+    list-style: none;
+    padding: 4px 0;
+    margin: 0;
+}
+
+.smart-select__item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: block;
+    transition: background var(--transition-fast);
+    border-left: 3px solid transparent;
+}
+
+.smart-select__item:hover,
+.smart-select__item:focus,
+.smart-select__item.active {
+    background: var(--bg-card-hover);
+    border-left-color: var(--brand);
+    outline: none;
+}
+
+.smart-select__item-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    justify-content: space-between;
+}
+
+.smart-select__item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.smart-select__item-code {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--brand);
+    background: var(--brand-light);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.smart-select__item-sub {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.smart-select__footer {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card-hover);
+    text-align: center;
+}
+
+.smart-select__empty {
+    padding: var(--space-md);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.smart-select__empty p {
+    margin-bottom: var(--space-sm);
+}

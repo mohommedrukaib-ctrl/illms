@@ -1,0 +1,24 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--lg" role="document">
+        <div class="modal__header"><h2 class="modal__title">{{ modal_title }}</h2><button type="button" class="modal__close" onclick="document.getElementById('modal-host').innerHTML=''">{% icon "close" "20" %}</button></div>
+        <form method="post" action="{% url 'core:microbe_create' %}" hx-post="{% url 'core:microbe_create' %}?modal=1" hx-target="#modal-host" hx-swap="innerHTML">
+            {% csrf_token %}
+            <div class="modal__body">
+                {% if form.errors %}<div class="message message--error mb-md" role="alert"><strong>Fix the following:</strong><ul style="margin:6px 0 0 1.1rem;">{% for field,errs in form.errors.items %}{% for e in errs %}<li>{{ field }}: {{ e }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group"><label class="form-label form-label--required">Name</label>{{ form.name }}</div>
+                    <div class="form-group"><label class="form-label form-label--required">Code</label>{{ form.code }}</div>
+                </div>
+                <div class="form-group"><label class="form-label">Scientific name</label>{{ form.scientific_name }}</div>
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Category</label>{{ form.category_name }}</div>
+                    <div class="form-group"><label class="form-label">Risk level</label>{{ form.risk_name }}</div>
+                </div>
+                <div class="form-group"><label class="form-label">Description</label>{{ form.description }}</div>
+                <div class="form-group d-flex items-center gap-sm">{{ form.is_active }} <label class="form-label m-0">Active</label></div>
+            </div>
+            <div class="modal__footer"><button type="button" class="btn btn--secondary" onclick="document.getElementById('modal-host').innerHTML=''">Cancel</button><button type="submit" class="btn btn--primary">{% icon "check" "18" %} Save</button></div>
+        </form>
+    </div>
+</div>

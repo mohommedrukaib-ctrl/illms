@@ -1,0 +1,20 @@
+{% comment %}
+Toast partial. Two usage modes:
+
+1) OOB HTMX push:
+     {% include "partials/_toast.html" with message="Saved." level="success" oob=True %}
+   Renders inside #toast-host via hx-swap-oob.
+
+2) Standalone injection.
+{% endcomment %}
+{% if oob %}
+<div id="toast-host" hx-swap-oob="beforeend">
+    <div class="message message--{{ level|default:'info' }}" role="alert" data-auto-dismiss>
+        <span>{{ message }}</span>
+    </div>
+</div>
+{% else %}
+<div class="message message--{{ level|default:'info' }}" role="alert" data-auto-dismiss>
+    <span>{{ message }}</span>
+</div>
+{% endif %}

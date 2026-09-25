@@ -1,0 +1,27 @@
+{% load ilims_tags %}
+<div class="modal-overlay"
+     id="modal-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-title"
+     data-close-on-backdrop="1">
+    <div class="modal {% if modal_size %}modal--{{ modal_size }}{% endif %}" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title" id="modal-title">{{ modal_title|default:"" }}</h2>
+            <button type="button"
+                    class="modal__close"
+                    aria-label="Close modal"
+                    onclick="document.getElementById('modal-host').innerHTML='';">
+                {% icon "close" "20" %}
+            </button>
+        </div>
+        <div class="modal__body">
+            {{ modal_body_html|safe }}
+        </div>
+        {% if modal_footer_html %}
+        <div class="modal__footer">
+            {{ modal_footer_html|safe }}
+        </div>
+        {% endif %}
+    </div>
+</div>

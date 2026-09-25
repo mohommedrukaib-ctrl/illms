@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Samples — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header" hx-headers='{"Cache-Control": "no-cache"}'>
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "sample" "24" %}</div>
+        <div class="page-header__text">
+            <h1>Product / Sample Intake</h1>
+            <p>Products and samples pending or undergoing laboratory testing</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:sample_create' %}?next={{ request.path|urlencode }}"
+           class="btn btn--primary"
+           hx-get="{% url 'core:sample_create' %}?modal=1&next={{ request.path|urlencode }}"
+           hx-target="#modal-host"
+           hx-swap="innerHTML">
+            {% icon "plus" "18" %} Register Sample
+        </a>
+    </div>
+</div>
+
+{% if request.GET.saved %}
+<div class="message message--success mb-md" data-auto-dismiss="1" role="alert">
+    <span>Successfully registered Sample <strong>{{ request.GET.saved }}</strong>.</span>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card__header">
+        <form method="get" action="" class="filters-bar w-full m-0 p-0" style="border:none; background:transparent;"
+              hx-get="{% url 'core:sample_list' %}"
+              hx-target="#sample-tbody"
+              hx-trigger="change from:select, keyup delay:500ms from:input"
+              hx-swap="innerHTML">
+            
+            <input type="search" name="q" class="form-input" placeholder="Search ID, Client, or Product…" value="{{ current_q }}" style="max-width: 280px;">
+            
+            <select name="status" class="form-select" style="max-width: 200px;">
+                <option value="">All Statuses</option>
+                {% for s in statuses %}
+                <option value="{{ s.pk }}" {% if current_status == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+
+            <noscript>
+                <button type="submit" class="btn btn--secondary">Filter</button>
+            </noscript>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sample ID</th>
+                    <th>Client</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Received</th>
+                    <th>Status</th>
+                    <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody id="sample-tbody">
+                {% include "workflow/partials/_sample_list_rows.html" %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

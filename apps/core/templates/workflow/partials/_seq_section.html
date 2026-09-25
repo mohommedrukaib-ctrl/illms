@@ -1,0 +1,89 @@
+{% load ilims_tags %}
+<div id="seq-section">
+{% if show_seq_section %}
+<div class="card mb-md">
+    <div class="card__header d-flex items-center justify-between">
+        <div>
+            <div class="card__title">Sequencing Tests</div>
+            <div class="card__subtitle">
+                {{ seq_tests|length }} run{{ seq_tests|length|pluralize }}
+            </div>
+        </div>
+        {% if not is_locked %}
+        <div class="d-flex gap-sm">
+            {# Create new sample then come back to Sequencing form #}
+            <a href="{% url 'core:sample_create' %}?return_to=sequencing"
+               class="btn btn--secondary btn--sm"
+               hx-get="{% url 'core:sample_create' %}?modal=1&return_to=sequencing"
+               hx-target="#modal-host"
+               hx-swap="innerHTML">
+                {% icon "plus" "16" %} New Sample
+            </a>
+            {# Log Sequencing test directly #}
+            <a href="{% url 'core:test_create' %}?sample={{ sample.pk }}"
+               class="btn btn--primary btn--sm"
+               hx-get="{% url 'core:test_create' %}?modal=1&sample={{ sample.pk }}&from_detail=1"
+               hx-target="#modal-host"
+               hx-swap="innerHTML">
+                {% icon "plus" "16" %} Register Sequencing
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Method</th>
+                    <th>Target</th>
+                    <th>Date</th>
+                    <th>Operator</th>
+                    <th>Sequence ID</th>
+                    <th>Read Length</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in seq_tests %}
+                <tr>
+                    <td>
+                        <a href="{% url 'core:test_detail' t.pk %}" class="text-brand">
+                            <code>{{ t.code }}</code>
+                        </a>
+                    </td>
+                    <td>{{ t.test_type.name|default:"—" }}</td>
+                    <td>{{ t.target.name|default:"—" }}</td>
+                    <td>{{ t.run_date|date:"Y-m-d" }}</td>
+                    <td>{{ t.operator.get_short_name|default:"—" }}</td>
+                    <td>{{ t.sequence_id|default:"—" }}</td>
+                    <td>{{ t.read_length|default:"—" }}</td>
+                    <td>
+                        {% if t.sequence_id %}
+                            <span class="pill pill--ok">Completed</span>
+                        {% else %}
+                            <span class="pill pill--warn">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'core:test_detail' t.pk %}"
+                           class="btn btn--ghost btn--sm">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center p-md">
+                        <span class="pill pill--warn">Pending</span>
+                        <span class="text-muted text-sm ml-sm">
+                            No sequencing run registered yet.
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+</div>

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block content %}
+<!-- Content identical to previous, but add this specific print stylesheet -->
+<style>
+    {% if system_settings.print_settings.receipt_size == 'THERMAL' %}
+    @media print {
+        @page { size: 80mm auto; margin: 0; }
+        body * { visibility: hidden; }
+        #printable-receipt, #printable-receipt * { visibility: visible; }
+        #printable-receipt { position: absolute; left: 0; top: 0; width: 78mm; padding: 5px; font-size: 12px; }
+        .page-header, .app-sidebar, .topbar { display: none !important; }
+    }
+    {% else %}
+    @media print {
+        @page { size: A5 portrait; margin: 15mm; }
+        body * { visibility: hidden; }
+        #printable-receipt, #printable-receipt * { visibility: visible; }
+        #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+        .page-header, .app-sidebar, .topbar { display: none !important; }
+    }
+    {% endif %}
+</style>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% comment %}HTMX partial: results dropdown for SmartSelect{% endcomment %}
+{% if results %}
+    <ul class="smart-select__list" role="listbox">
+        {% for r in results %}
+        <li class="smart-select__item"
+            role="option"
+            tabindex="0"
+            data-pk="{{ r.pk }}"
+            data-display="{{ r.display }}"
+            data-target-id="{{ input_id }}">
+            <div class="smart-select__item-main">
+                <span class="smart-select__item-name">{{ r.display }}</span>
+                {% if r.code %}
+                    <span class="smart-select__item-code">{{ r.code }}</span>
+                {% endif %}
+            </div>
+            {% if r.sub %}
+                <div class="smart-select__item-sub">{{ r.sub }}</div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="smart-select__footer">
+        <a href="{{ picker_url }}?field={{ field_name }}&amp;q={{ query|urlencode }}"
+           class="smart-select__link">
+            Browse all →
+        </a>
+    </div>
+{% else %}
+    <div class="smart-select__empty">
+        <p>No {{ kind_label|lower }} matches “{{ query }}”.</p>
+        <a href="{{ picker_url }}?field={{ field_name }}&amp;q={{ query|urlencode }}"
+           class="smart-select__link">
+            Browse full list →
+        </a>
+    </div>
+{% endif %}

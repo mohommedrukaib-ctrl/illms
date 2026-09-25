@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+{% block content %}
+<div class="page-header" hx-headers='{"Cache-Control": "no-cache"}'>
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "microbe" "24" %}</div>
+        <div class="page-header__text"><h1>{{ page_title }}</h1><p>{{ page_subtitle }}</p></div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:microbe_create' %}" class="btn btn--primary" hx-get="{% url 'core:microbe_create' %}?modal=1" hx-target="#modal-host" hx-swap="innerHTML">{% icon "plus" "18" %} Add Microorganism</a>
+    </div>
+</div>
+{% if request.GET.saved %}<div class="message message--success mb-md" data-auto-dismiss="1" role="alert"><span>Successfully created Microorganism <strong>{{ request.GET.saved }}</strong>.</span></div>{% endif %}
+<div class="card">
+    <div class="card__header">
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;" hx-get="{% url 'core:microbe_list' %}" hx-trigger="keyup changed delay:400ms, search" hx-target="#microbe-tbody" hx-swap="innerHTML">
+            <input type="search" name="q" class="form-input" placeholder="Search name or code…" value="{{ request.GET.q }}" style="max-width:320px;">
+            <noscript><button class="btn btn--secondary" type="submit">Search</button></noscript>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Name</th><th>Scientific</th><th>Category</th><th>Risk</th><th>Status</th></tr></thead>
+            <tbody id="microbe-tbody">{% include "molecular/partials/_microbe_list_rows.html" %}</tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

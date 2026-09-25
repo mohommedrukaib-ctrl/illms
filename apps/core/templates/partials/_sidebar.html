@@ -1,0 +1,133 @@
+{% load static ilims_tags %}
+<aside id="sidebar" class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar__header">
+        <div class="sidebar__logo" aria-hidden="true">IL</div>
+        <div class="sidebar__brand">
+            <span class="sidebar__brand-name">{{ ILIMS_TITLE }}</span>
+            <span class="sidebar__brand-sub">{{ ILIMS_SUBTITLE }}</span>
+        </div>
+    </div>
+
+    <nav class="sidebar__nav">
+        <!-- LABORATORY -->
+        <div class="sidebar__group">
+            <span class="sidebar__group-title">Laboratory</span>
+            <a href="{% url 'core:dashboard' %}"
+               class="sidebar__link {% active_nav 'dashboard' %}">
+                {% icon "dashboard" %}
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'core:sample_list' %}"
+               class="sidebar__link {% active_nav 'sample_list' 'sample_create' 'sample_detail' %}">
+                {% icon "sample" %}
+                <span>Samples</span>
+            </a>
+            {% if "module.batches"|feature %}
+            <a href="/batches/"
+               class="sidebar__link {% active_nav 'batches_list' %}">
+                {% icon "batch" %}
+                <span>Batches</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'core:client_list' %}"
+               class="sidebar__link {% active_nav 'client_list' 'client_create' %}">
+                {% icon "client" %}
+                <span>Clients</span>
+            </a>
+        </div>
+
+                {% if "module.dna_extraction"|feature or "module.pcr"|feature or "module.microorganism_id"|feature %}
+        <div class="sidebar__group">
+            <span class="sidebar__group-title">Molecular</span>
+            {% if "module.dna_extraction"|feature %}
+            <a href="{% url 'core:dna_list' %}"
+               class="sidebar__link {% active_nav 'dna_list' 'dna_create' 'dna_detail' %}">
+                {% icon "dna" %}
+                <span>DNA Extraction</span>
+            </a>
+            {% endif %}
+            {% if "module.pcr"|feature or "module.qpcr"|feature or "module.sequencing"|feature %}
+            <a href="{% url 'core:test_list' %}"
+               class="sidebar__link {% active_nav 'test_list' 'test_create' 'test_detail' %}">
+                {% icon "flask" %}
+                <span>PCR / qPCR Tests</span>
+            </a>
+            {% endif %}
+            {% if "module.microorganism_id"|feature %}
+            <a href="{% url 'core:microbe_list' %}"
+               class="sidebar__link {% active_nav 'microbe_list' 'microbe_create' %}">
+                {% icon "microbe" %}
+                <span>Microorganisms</span>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- QUALITY -->
+        {% if "module.qc_approval"|feature %}
+        <div class="sidebar__group">
+            <span class="sidebar__group-title">Quality</span>
+            <a href="/qc/"
+               class="sidebar__link {% active_nav 'qc_queue' %}">
+                {% icon "qc" %}
+                <span>QC Queue</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- REPORTS -->
+        {% if "module.reports"|feature %}
+        <div class="sidebar__group">
+            <span class="sidebar__group-title">Reports</span>
+            <a href="/reports/"
+               class="sidebar__link {% active_nav 'reports_list' %}">
+                {% icon "report" %}
+                <span>Reports</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- RECORDS -->
+        <div class="sidebar__group">
+            <span class="sidebar__group-title">Records</span>
+            {% if "module.reminders"|feature %}
+            <a href="/reminders/"
+               class="sidebar__link {% active_nav 'reminders_list' %}">
+                {% icon "reminder" %}
+                <span>Reminders</span>
+            </a>
+            {% endif %}
+            {% if "module.notifications"|feature %}
+            <a href="/notifications/"
+               class="sidebar__link {% active_nav 'notifications_list' %}">
+                {% icon "bell" %}
+                <span>Notifications</span>
+            </a>
+            {% endif %}
+            <a href="/audit/"
+               class="sidebar__link {% active_nav 'audit_list' %}">
+                {% icon "audit" %}
+                <span>Audit Trail</span>
+            </a>
+        </div>
+
+        <!-- SYSTEM -->
+        <div class="sidebar__group">
+            <span class="sidebar__group-title">System</span>
+            <a href="{% url 'core:settings_hub' %}"
+               class="sidebar__link {% active_nav 'settings_hub' %}">
+                {% icon "settings" %}
+                <span>Settings</span>
+            </a>
+            <a href="/users/"
+               class="sidebar__link {% active_nav 'users_list' %}">
+                {% icon "users" %}
+                <span>Users</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar__footer">
+        {{ ILIMS_TITLE }} v{{ ILIMS_VERSION }}
+    </div>
+</aside>

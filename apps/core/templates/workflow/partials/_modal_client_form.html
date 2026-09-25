@@ -1,0 +1,77 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--lg" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title|default:"Register New Client" }}</h2>
+            <button type="button" class="modal__close" aria-label="Close modal" onclick="document.getElementById('modal-host').innerHTML='';">
+                {% icon "close" "20" %}
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'core:client_create' %}" hx-post="{% url 'core:client_create' %}?modal=1" hx-target="#modal-host" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <div class="modal__body">
+                {% if form.errors or form.non_field_errors or form_errors_summary %}
+                 <div class="message message--error mb-md" role="alert">
+        <strong>Could not save client — fix the following:</strong>
+        <ul style="margin: 6px 0 0 1.1rem; padding: 0;">
+            {% for field, errs in form.errors.items %}
+                {% for e in errs %}
+                <li><strong>{% if field == '__all__' %}Form{% else %}{{ field }}{% endif %}:</strong> {{ e }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Company / Client Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label">Contact Person</label>
+                        {{ form.contact_person }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Country</label>
+                        {{ form.country }}
+                        {% if form.country.errors %}<div class="form-error">{{ form.country.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Region / State</label>
+                    {{ form.region }}
+                    {% if form.region.errors %}<div class="form-error">{{ form.region.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Street Address</label>
+                    {{ form.address }}
+                </div>
+            </div>
+
+            <div class="modal__footer">
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('modal-host').innerHTML='';">Cancel</button>
+                <button type="submit" class="btn btn--primary">{% icon "check" "18" %} Save Client</button>
+            </div>
+        </form>
+    </div>
+</div>

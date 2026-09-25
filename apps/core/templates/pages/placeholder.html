@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Dashboard — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        {% if page_icon %}
+        <div class="page-header__icon">
+            {% icon page_icon "24" %}
+        </div>
+        {% endif %}
+        <div class="page-header__text">
+            <h1>{{ page_title|default:"Dashboard" }}</h1>
+            {% if page_subtitle %}<p>{{ page_subtitle }}</p>{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Real-time KPI cards -->
+<div class="stat-cards">
+    <div class="stat-card stat-card--brand">
+        <div class="stat-card__icon">{% icon "sample" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Active Samples</div>
+            <div class="stat-card__value">{{ stats.active_samples|default:"0" }}</div>
+            <div class="stat-card__sub">Currently in progress</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">{% icon "flask" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Testing & Analysis</div>
+            <div class="stat-card__value">{{ stats.needs_qc|default:"0" }}</div>
+            <div class="stat-card__sub">Requires laboratory action</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--info">
+        <div class="stat-card__icon">{% icon "client" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Total Clients</div>
+            <div class="stat-card__value">{{ stats.total_clients|default:"0" }}</div>
+            <div class="stat-card__sub">Registered in system</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--ok">
+        <div class="stat-card__icon">{% icon "check" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Tests This Month</div>
+            <div class="stat-card__value">{{ stats.monthly_tests|default:"0" }}</div>
+            <div class="stat-card__sub">Assays run</div>
+        </div>
+    </div>
+</div>
+
+<div class="layout-two-col mt-lg">
+    <!-- Left Column: Recent Activity -->
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Recently Registered Samples</div>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Sample ID</th>
+                        <th>Product</th>
+                        <th>Client</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in recent_samples %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'core:sample_detail' s.pk %}" class="text-bold text-brand">
+                                <code class="text-mono">{{ s.code }}</code>
+                            </a>
+                        </td>
+                        <td>{{ s.product_name }}</td>
+                        <td class="text-sm">{{ s.client.name|truncatechars:20 }}</td>
+                        <td>
+                            <span class="pill pill--{{ s.status.color|default:'info' }}">{{ s.status.name }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'core:sample_detail' s.pk %}" class="btn btn--ghost btn--sm">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center p-md text-muted">No recent samples.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Links -->
+    <div>
+        <div class="card mb-md">
+            <div class="card__header">
+                <div class="card__title">Quick Actions</div>
+            </div>
+            <div class="card__body d-flex flex-wrap gap-sm">
+                <a href="{% url 'core:sample_create' %}?next={% url 'core:dashboard' %}"
+                   class="btn btn--primary btn--block"
+                   hx-get="{% url 'core:sample_create' %}?modal=1&next={% url 'core:dashboard' %}"
+                   hx-target="#modal-host"
+                   hx-swap="innerHTML">
+                    {% icon "plus" "18" %} Register Sample
+                </a>
+                <a href="{% url 'core:client_create' %}?next={% url 'core:dashboard' %}"
+                   class="btn btn--secondary btn--block"
+                   hx-get="{% url 'core:client_create' %}?modal=1&next={% url 'core:dashboard' %}"
+                   hx-target="#modal-host"
+                   hx-swap="innerHTML">
+                    {% icon "client" "18" %} Add Client
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

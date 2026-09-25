@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "flask" "24" %}</div>
+        <div class="page-header__text">
+            <h1><code class="text-mono">{{ test.code }}</code></h1>
+            <p>{{ test.get_test_type_display }} · Sample {{ test.sample.code }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:test_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+</div>
+
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header"><div class="card__title">Run information</div></div>
+        <div class="card__body">
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div><div class="text-xs text-muted text-uppercase">Sample</div>
+                    <a href="{% url 'core:sample_detail' test.sample_id %}" class="text-brand text-semibold">{{ test.sample.code }}</a></div>
+                <div><div class="text-xs text-muted text-uppercase">Client</div><div class="text-semibold">{{ test.sample.client.name }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Target</div><div class="text-semibold">{{ test.target.name|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Assay</div><div class="text-semibold">{{ test.assay_name|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Run date</div><div class="text-semibold">{{ test.run_date }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Operator</div><div class="text-semibold">{{ test.operator.get_full_name|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Instrument</div><div class="text-semibold">{{ test.instrument|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">DNA extraction</div>
+                    {% if test.dna_extraction_id %}<a href="{% url 'core:dna_detail' test.dna_extraction_id %}" class="text-brand">{{ test.dna_extraction.code }}</a>{% else %}—{% endif %}
+                </div>
+                {% if test.ct_value %}<div><div class="text-xs text-muted text-uppercase">Ct</div><div class="text-semibold">{{ test.ct_value }}</div></div>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card__header"><div class="card__title">Status / detection</div></div>
+        <div class="card__body text-center">
+            <div class="mb-sm"><span class="pill pill--info">{{ test.get_status_display }}</span></div>
+            <div class="text-xl text-bold">{{ test.detection_summary }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-md">
+    <div class="card__header"><div class="card__title">Result lines</div></div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Organism</th><th>Detection</th><th>Ct</th><th>Gene</th><th>Notes</th></tr></thead>
+            <tbody>
+            {% for r in results %}
+            <tr>
+                <td><strong>{{ r.microorganism.name }}</strong> <code class="text-xs">{{ r.microorganism.code }}</code></td>
+                <td><span class="pill pill--{% if r.detection == 'DETECTED' %}danger{% elif r.detection == 'NOT_DETECTED' %}ok{% else %}warn{% endif %}">{{ r.get_detection_display }}</span></td>
+                <td>{{ r.ct_value|default:"—" }}</td>
+                <td>{{ r.gene_target|default:"—" }}</td>
+                <td class="text-muted text-sm">{{ r.notes|default:"" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted p-md">No result lines recorded.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

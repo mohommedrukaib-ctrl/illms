@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static ilims_tags %}
+
+{% block title %}Sign In — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block auth_content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo" aria-hidden="true">IL</div>
+            <h1 class="login-title">{{ ILIMS_TITLE }}</h1>
+            <p class="login-subtitle">{{ ILIMS_SUBTITLE }} — Sign in to continue</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="message message--error mb-md" role="alert">
+            <span>Invalid email/username or password. Please try again.</span>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:login' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_username" class="form-label form-label--required">
+                    Email or Username
+                </label>
+                <input type="text"
+                       id="id_username"
+                       name="username"
+                       class="form-input{% if form.errors %} form-input--error{% endif %}"
+                       placeholder="Enter your email or username"
+                       autocomplete="username"
+                       required
+                       autofocus
+                       value="{{ form.username.value|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="id_password" class="form-label form-label--required">
+                    Password
+                </label>
+                <input type="password"
+                       id="id_password"
+                       name="password"
+                       class="form-input{% if form.errors %} form-input--error{% endif %}"
+                       placeholder="Enter your password"
+                       autocomplete="current-password"
+                       required>
+            </div>
+
+            {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md">
+                {% icon "lock" "18" %}
+                Sign In
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-muted mt-lg">
+            {{ ILIMS_TITLE }} v{{ ILIMS_VERSION }}
+        </p>
+    </div>
+</div>
+{% endblock %}

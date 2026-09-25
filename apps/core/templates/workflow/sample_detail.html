@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "sample" "32" %}</div>
+        <div class="page-header__text">
+            <h1><code class="text-mono" style="font-size:inherit">{{ sample.code }}</code></h1>
+            <p>{{ sample.client.name }} · {{ sample.product_name }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <nav aria-label="Breadcrumb" class="mb-sm">
+            <ol class="breadcrumb justify-end">
+                {% for b in breadcrumbs %}
+                <li>{% if b.url %}<a href="{{ b.url }}">{{ b.label }}</a>{% else %}<span class="breadcrumb__current">{{ b.label }}</span>{% endif %}</li>
+                {% endfor %}
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="?tab=overview" class="tab {% if active_tab == 'overview' %}active{% endif %}">Overview</a>
+    <a href="?tab=tests" class="tab {% if active_tab == 'tests' %}active{% endif %}">Molecular Work</a>
+    <a href="?tab=timeline" class="tab {% if active_tab == 'timeline' %}active{% endif %}">Timeline</a>
+    <a href="?tab=audit" class="tab {% if active_tab == 'audit' %}active{% endif %}">Audit Trail</a>
+</div>
+
+{% if active_tab == 'overview' %}
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header"><div class="card__title">Sample Information</div></div>
+        <div class="card__body">
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div><div class="text-xs text-uppercase text-muted">Client</div>
+                     <div class="text-semibold">{{ sample.client.name }}</div></div>
+                <div><div class="text-xs text-uppercase text-muted">Molecular Type</div>
+                     <div class="text-semibold"><span class="pill pill--brand">{{ sample.get_molecular_type_display }}</span></div></div>
+                <div><div class="text-xs text-uppercase text-muted">Requested Test</div>
+                     <div class="text-semibold">{{ sample.requested_test.name|default:"—" }}</div></div>
+                <div><div class="text-xs text-uppercase text-muted">Received Date</div>
+                     <div class="text-semibold">{{ sample.received_date|date:"d M Y" }}</div></div>
+                <div><div class="text-xs text-uppercase text-muted">Category / Type</div>
+                     <div class="text-semibold">{{ sample.product_category.name|default:"—" }} / {{ sample.product_type.name|default:"—" }}</div></div>
+                <div><div class="text-xs text-uppercase text-muted">Priority</div>
+                     <div class="text-semibold">{{ sample.get_priority_display }}</div></div>
+            </div>
+            {% if sample.remarks %}
+            <div class="mt-md">
+                <div class="text-xs text-uppercase text-muted">Remarks</div>
+                <div class="mt-xs p-sm bg-card-hover rounded border">{{ sample.remarks }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        {% include "workflow/partials/_status_card.html" %}
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'tests' %}
+    {% include "workflow/partials/_dna_section.html" %}
+    {% include "workflow/partials/_pcr_section.html" %}
+    {% include "workflow/partials/_seq_section.html" %}
+{% endif %}
+
+{% if active_tab == 'timeline' %}
+<div class="card max-w-lg">
+    <div class="card__body">
+        <ul style="list-style:none;padding-left:10px;border-left:2px solid var(--border-color);">
+            {% for event in events %}
+            <li style="position:relative;margin-bottom:var(--space-lg);">
+                <div style="position:absolute;left:-15px;top:0;width:10px;height:10px;border-radius:50%;background:var(--brand);"></div>
+                <div class="text-xs text-muted mb-xs">{{ event.timestamp|date:"d M Y, H:i" }}</div>
+                <div class="text-sm">
+                    <strong>{{ event.changed_by.get_full_name|default:"System" }}</strong> changed status to
+                    <span class="pill pill--info">{{ event.to_status }}</span>
+                </div>
+                {% if event.notes %}
+                <div class="text-sm mt-xs p-sm bg-card-hover rounded border">{{ event.notes }}</div>
+                {% endif %}
+            </li>
+            {% empty %}
+            <li class="text-muted text-sm">No timeline events recorded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'audit' %}
+<div class="card">
+    <div class="card__header">
+        <div class="card__title">Cryptographic Audit Trail</div>
+    </div>
+    <div class="table-container">
+        <table class="table text-xs">
+            <thead><tr><th>Timestamp</th><th>Action</th><th>User</th><th>Diff</th><th>Hash</th></tr></thead>
+            <tbody>
+                {% for log in audits %}
+                <tr>
+                    <td class="text-muted">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    <td><strong class="text-brand">{{ log.action }}</strong></td>
+                    <td>{{ log.user.username|default:"SYSTEM" }}</td>
+                    <td><code class="text-mono">{{ log.changes|truncatechars:50 }}</code></td>
+                    <td><code class="text-mono text-muted">{{ log.hash|truncatechars:12 }}...</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

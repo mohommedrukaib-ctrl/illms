@@ -1,0 +1,18 @@
+{% if clients %}
+    {% for c in clients %}
+    <tr>
+        <td><code class="text-mono">{{ c.code }}</code></td>
+        <td><strong>{{ c.name }}</strong></td>
+        <td>
+            {{ c.contact_person|default:"—" }}<br>
+            <span class="text-xs text-muted">{{ c.email }}</span>
+        </td>
+        <td>{{ c.region.name|default:"—" }}, {{ c.country.iso2 }}</td>
+        <td><span class="pill pill--ok">Active</span></td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="5" class="text-center p-lg text-muted">No clients found.</td>
+    </tr>
+{% endif %}

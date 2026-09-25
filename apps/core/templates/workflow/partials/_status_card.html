@@ -1,0 +1,18 @@
+{% load ilims_tags %}
+<div id="status-card">
+    <div class="card mb-md">
+        <div class="card__header"><div class="card__title">Status</div></div>
+        <div class="card__body text-center">
+            <div class="mb-sm">Current State:</div>
+            <span class="pill pill--{{ sample.state_color }} text-lg p-sm">{{ sample.get_workflow_state_display }}</span>
+            <div class="mt-lg">
+                <a href="{% url 'core:sample_advance' sample.pk %}"
+                   class="btn btn--secondary btn--block"
+                   hx-get="{% url 'core:sample_advance' sample.pk %}?modal=1"
+                   hx-target="#modal-host" hx-swap="innerHTML">
+                    Update Status
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Pick {{ kind_label }} — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "search" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="{% url 'core:dashboard' %}">Home</a></li>
+                <li><span class="breadcrumb__current">Pick {{ kind_label }}</span></li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card__header">
+        <div class="card__title">Browse {{ kind_label }} records</div>
+    </div>
+    <div class="card__body">
+        {# Search form — plain GET, works without JS #}
+        <form method="get" action="" class="filters-bar">
+            <input type="hidden" name="field" value="{{ field_name }}">
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <input type="search"
+                   name="q"
+                   class="form-input"
+                   value="{{ query }}"
+                   placeholder="Search {{ kind_label|lower }}…"
+                   autofocus>
+            <button type="submit" class="btn btn--primary">
+                {% icon "search" "16" %} Apply filters
+            </button>
+            {% if query %}
+            <a href="?field={{ field_name }}&amp;next={{ next_url|urlencode }}" class="btn btn--ghost">Clear</a>
+            {% endif %}
+        </form>
+
+        {% if results %}
+        <div class="table-container mt-md">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{{ kind_label }}</th>
+                        <th>Code</th>
+                        <th>Details</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td><strong>{{ r.display }}</strong></td>
+                        <td><code class="text-mono">{{ r.code }}</code></td>
+                        <td class="text-muted">{{ r.sub }}</td>
+                        <td class="text-right">
+                            {% if next_url and field_name %}
+                                {# Return to the form with hidden PK + display text populated #}
+                                <a href="{{ next_url }}{% if '?' in next_url %}&amp;{% else %}?{% endif %}{{ field_name }}={{ r.pk }}&amp;{{ field_name }}__text={{ r.display|urlencode }}"
+                                   class="btn btn--primary btn--sm">
+                                    Select
+                                </a>
+                            {% else %}
+                                <span class="text-muted text-xs">{{ r.pk }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state__icon">{% icon "search" "64" %}</div>
+            <div class="empty-state__title">No results</div>
+            <div class="empty-state__text">
+                No {{ kind_label|lower }} matches your search.
+                {% if next_url %}
+                <br><a href="{{ next_url }}" class="btn btn--secondary btn--sm mt-sm">Back to form</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

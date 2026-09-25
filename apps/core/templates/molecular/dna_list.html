@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "dna" "24" %}</div>
+        <div class="page-header__text"><h1>{{ page_title }}</h1><p>{{ page_subtitle }}</p></div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:dna_create' %}" class="btn btn--primary"
+           hx-get="{% url 'core:dna_create' %}?modal=1" hx-target="#modal-host" hx-swap="innerHTML">
+            {% icon "plus" "18" %} Log Extraction
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card__header">
+        <!-- Live AJAX Filter Form -->
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;"
+              hx-get="{% url 'core:dna_list' %}" hx-target="#dna-tbody" hx-trigger="change from:select, keyup delay:400ms from:input" hx-swap="innerHTML">
+            <input type="search" name="q" class="form-input" value="{{ current_q }}" placeholder="Search code / sample…" style="max-width:240px;">
+            
+            <select name="status" class="form-input" style="max-width:180px;">
+                <option value="">All statuses</option>
+                <!-- FIXED: Iterate over dynamic objects -->
+                {% for s in statuses %}
+                <option value="{{ s.pk }}" {% if current_status == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+            <noscript><button class="btn btn--secondary" type="submit">Filter</button></noscript>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Sample</th><th>Method</th><th>Date</th><th>Operator</th><th>Status</th><th></th></tr></thead>
+            <!-- The tbody that gets swapped by live Ajax -->
+            <tbody id="dna-tbody">{% include "molecular/partials/_dna_list_rows.html" %}</tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

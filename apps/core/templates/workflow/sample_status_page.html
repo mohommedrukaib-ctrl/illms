@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ modal_title }} — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__text"><h1>{{ modal_title|default:"Update Status" }}</h1></div>
+    </div>
+</div>
+
+<div class="card max-w-sm">
+    <div class="card__body">
+        <form method="post" action="{% url 'core:sample_advance' sample.pk %}" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label form-label--required">New Status</label>
+                {{ form.to_status }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Transition Notes (Optional)</label>
+                {{ form.notes }}
+            </div>
+            <div class="d-flex justify-end gap-sm mt-lg">
+                <a href="{% url 'core:sample_detail' sample.pk %}" class="btn btn--secondary">Cancel</a>
+                <button type="submit" class="btn btn--primary">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

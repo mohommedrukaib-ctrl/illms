@@ -1,0 +1,241 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--xl" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title|default:"Register Product / Sample" }}</h2>
+            <button type="button" class="modal__close" onclick="document.getElementById('modal-host').innerHTML=''">
+                {% icon "close" "20" %}
+            </button>
+        </div>
+
+        <form id="sample-form" method="post" action="{% url 'core:sample_create' %}"
+              hx-post="{% url 'core:sample_create' %}?modal=1"
+              hx-target="#modal-host"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <input type="hidden" name="return_to" value="{{ return_to|default:'' }}">
+
+            <div class="modal__body">
+                {% if form.errors %}
+                <div class="message message--error mb-md" role="alert">
+                    <strong>Fix the following:</strong>
+                    <ul style="margin:6px 0 0 1.1rem;padding:0;">
+                        {% for field, errs in form.errors.items %}
+                            {% for e in errs %}<li><strong>{{ field }}:</strong> {{ e }}</li>{% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Client Name</label>
+                        <div class="d-flex gap-sm items-start">
+                            <div class="flex-1">{{ form.client_name }}</div>
+                            <button type="button" class="btn btn--secondary btn--icon" id="btn-toggle-phone"
+                                    style="height:42px;width:42px;flex-shrink:0;" title="New client — unlock phone">
+                                {% icon "plus" "20" %}
+                            </button>
+                        </div>
+                        {% if form.client_name.errors %}<div class="form-error">{{ form.client_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="phone-label">Client Phone</label>
+                        {{ form.client_phone }}
+                        <input type="hidden" name="client_phone_mirror" id="id_client_phone_mirror" value="">
+                        <div class="form-hint" id="phone-hint">Click + to unlock for a new client.</div>
+                        {% if form.client_phone.errors %}<div class="form-error">{{ form.client_phone.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Product Name</label>
+                        {{ form.product_name }}
+                        {% if form.product_name.errors %}<div class="form-error">{{ form.product_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        {{ form.product_category }}
+                        <div class="form-hint">Select or type a new category.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="type-label">Product Type</label>
+                        {{ form.product_type }}
+                        <div class="form-hint" id="type-hint">Select category first.</div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+                <h3 class="text-sm text-uppercase text-muted mb-sm">Molecular Workflow (Required)</h3>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 2fr;">
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Molecular Type</label>
+                        {{ form.molecular_type }}
+                        {% if form.molecular_type.errors %}<div class="form-error">{{ form.molecular_type.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label form-label--required" id="test-label">Requested Test Method</label>
+                        {{ form.requested_test }}
+                        <div class="form-hint" id="test-hint">Select molecular type first.</div>
+                        {% if form.requested_test.errors %}<div class="form-error">{{ form.requested_test.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Received Date</label>
+                        {{ form.received_date }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        {{ form.due_date }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        {{ form.priority }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Storage</label>{{ form.storage_condition }}</div>
+                    {% if form.assigned_to %}
+                    <div class="form-group"><label class="form-label">Technician</label>{{ form.assigned_to }}</div>
+                    {% endif %}
+                </div>
+
+                {% if form.production_date %}
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Production Date</label>{{ form.production_date }}</div>
+                    <div class="form-group"><label class="form-label">Expiry Date</label>{{ form.expiry_date }}</div>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Remarks</label>
+                    {{ form.remarks }}
+                </div>
+            </div>
+
+            <div class="modal__footer">
+                <button type="button" class="btn btn--secondary"
+                        onclick="document.getElementById('modal-host').innerHTML=''">Cancel</button>
+                <button type="submit" class="btn btn--primary">
+                    {% icon "check" "18" %}
+                    {% if return_to == 'dna' or return_to == 'test' %}
+                        Save Sample &amp; Continue
+                    {% else %}
+                        Register Sample
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    var phoneField = document.getElementById("id_client_phone");
+    var phoneMirror = document.getElementById("id_client_phone_mirror");
+    var toggleBtn = document.getElementById("btn-toggle-phone");
+    var pkField = document.getElementById("id_client_name");
+
+    if (toggleBtn && phoneField) {
+        toggleBtn.addEventListener("click", function () {
+            if (phoneField.disabled) {
+                phoneField.disabled = false;
+                phoneField.focus();
+                document.getElementById("phone-hint").textContent = "Enter phone for new client.";
+                document.getElementById("phone-label").classList.add("form-label--required");
+                if (pkField) pkField.value = "";
+            } else {
+                phoneField.disabled = true;
+                phoneField.value = "";
+                if (phoneMirror) phoneMirror.value = "";
+                document.getElementById("phone-hint").textContent = "Click + to unlock for a new client.";
+                document.getElementById("phone-label").classList.remove("form-label--required");
+            }
+        });
+        phoneField.addEventListener("input", function () {
+            if (phoneMirror) phoneMirror.value = phoneField.value;
+        });
+    }
+
+    // Cascade: Category unlocks Product Type
+    function unlockProductType() {
+        var typeText = document.getElementById("id_product_type__text");
+        var typePk = document.getElementById("id_product_type");
+        var hint = document.getElementById("type-hint");
+        var catText = document.getElementById("id_product_category__text");
+        var catPk = document.getElementById("id_product_category");
+        var catVal = (catText && catText.value.trim()) || (catPk && catPk.value.trim());
+
+        if (catVal) {
+            if (typeText) typeText.disabled = false;
+            if (hint) hint.textContent = "Select or type a product type.";
+        } else {
+            if (typeText) { typeText.disabled = true; typeText.value = ""; }
+            if (typePk) typePk.value = "";
+            if (hint) hint.textContent = "Select category first.";
+        }
+    }
+
+    var catTextEl = document.getElementById("id_product_category__text");
+    var catPkEl = document.getElementById("id_product_category");
+    if (catTextEl) catTextEl.addEventListener("input", unlockProductType);
+    if (catPkEl) catPkEl.addEventListener("change", unlockProductType);
+    unlockProductType();
+
+    // Cascade: Molecular Type unlocks Requested Test + filters by category
+    function unlockRequestedTest() {
+        var molType = document.getElementById("id_molecular_type");
+        var testText = document.getElementById("id_requested_test__text");
+        var testPk = document.getElementById("id_requested_test");
+        var testLabel = document.getElementById("test-label");
+        var hint = document.getElementById("test-hint");
+
+        if (molType && molType.value) {
+            if (testText) testText.disabled = false;
+            if (hint) {
+                var labels = {
+                    "DNA_EXTRACTION": "Select a DNA extraction method (e.g., Spin Column, Magnetic Bead).",
+                    "PCR_QPCR": "Select a PCR/qPCR method (e.g., Real-Time qPCR, End-point PCR).",
+                    "SEQUENCING": "Select a sequencing method (e.g., Sanger, 16S rRNA, WGS)."
+                };
+                hint.textContent = labels[molType.value] || "Select a test method.";
+            }
+        } else {
+            if (testText) { testText.disabled = true; testText.value = ""; }
+            if (testPk) testPk.value = "";
+            if (hint) hint.textContent = "Select molecular type first.";
+        }
+    }
+
+    var molTypeEl = document.getElementById("id_molecular_type");
+    if (molTypeEl) molTypeEl.addEventListener("change", unlockRequestedTest);
+    unlockRequestedTest();
+
+    // Send category param to SmartSelect endpoints
+    document.body.addEventListener("htmx:configRequest", function (evt) {
+        var el = evt.detail.elt;
+        if (!el || !el.id) return;
+        var catEl = document.getElementById("id_product_category__text");
+        var catVal = catEl ? (catEl.value || "").trim() : "";
+        if (catVal && (el.id === "id_product_type__text" || el.id === "id_requested_test__text")) {
+            evt.detail.parameters["category"] = catVal;
+        }
+        // Send molecular_type to filter test methods
+        var molEl = document.getElementById("id_molecular_type");
+        var molVal = molEl ? molEl.value : "";
+        if (molVal && el.id === "id_requested_test__text") {
+            evt.detail.parameters["molecular_type"] = molVal;
+        }
+    });
+})();
+</script>

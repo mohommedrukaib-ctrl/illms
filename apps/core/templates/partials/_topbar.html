@@ -1,0 +1,87 @@
+{% load static ilims_tags %}
+<header class="topbar" role="banner">
+    <!-- Mobile hamburger -->
+    <button id="sidebar-toggle"
+            class="topbar__hamburger"
+            type="button"
+            aria-label="Toggle navigation menu"
+            aria-expanded="false">
+        {% icon "menu" "24" %}
+    </button>
+
+    <!-- Search -->
+    <div class="topbar__search">
+        <form action="{% url 'core:dashboard' %}" method="get" role="search">
+            <span class="topbar__search-icon" aria-hidden="true">{% icon "search" "16" %}</span>
+            <input type="search"
+                   name="q"
+                   class="topbar__search-input"
+                   placeholder="Find a page…"
+                   aria-label="Global search"
+                   autocomplete="off">
+        </form>
+    </div>
+
+    <!-- Actions -->
+    <div class="topbar__actions">
+        <!-- Print -->
+        <a href="javascript:void(0)"
+           class="topbar__btn"
+           aria-label="Print page"
+           onclick="window.print();return false;">
+            {% icon "print" "20" %}
+        </a>
+
+        <!-- Fullscreen (noop without JS, graceful) -->
+        <button type="button"
+                class="topbar__btn"
+                aria-label="Toggle fullscreen"
+                title="Fullscreen">
+            {% icon "fullscreen" "20" %}
+        </button>
+
+        <!-- Theme toggle — works without JS via POST form -->
+        {% include "partials/_theme_toggle.html" %}
+
+        <a href="{% url 'core:settings_hub' %}"
+        class="topbar__btn"
+        aria-label="Settings">
+            {% icon "settings" "20" %}
+        </a>
+
+        <a href="{% url 'core:smart_select_demo' %}"
+   class="topbar__btn"
+   aria-label="SmartSelect demo"
+   title="SmartSelect demo">
+    {% icon "search" "20" %}
+</a>
+        <!-- Notifications -->
+        <a href="{% url 'core:dashboard' %}"
+           class="topbar__btn"
+           aria-label="Notifications"
+           title="Notifications">
+            {% icon "bell" "20" %}
+            {# Badge — will be dynamic in Phase 8 #}
+            {# <span class="topbar__badge" aria-label="3 unread">3</span> #}
+        </a>
+
+        <!-- User menu -->
+        <a href="{% url 'accounts:profile' %}" class="topbar__user" title="Profile">
+            <div class="topbar__avatar" aria-hidden="true">
+                {{ user|initials }}
+            </div>
+            <div class="topbar__user-info">
+                <span class="topbar__user-name">{{ user.get_short_name }}</span>
+                <span class="topbar__user-role">{{ user.get_role_display }}</span>
+            </div>
+        </a>
+
+        <!-- Logout -->
+        <a href="{% url 'accounts:logout' %}"
+           class="topbar__btn"
+           aria-label="Log out"
+           title="Log out">
+            {% icon "logout" "20" %}
+        </a>
+    </div>
+</header>

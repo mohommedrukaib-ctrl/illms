@@ -1,0 +1,18 @@
+{% if microbes %}
+{% for m in microbes %}
+<tr>
+    <td><code class="text-mono">{{ m.code }}</code></td>
+    <td><strong>{{ m.name }}</strong></td>
+    <td class="text-muted text-sm">{{ m.scientific_name|default:"—" }}</td>
+    <td><span class="pill pill--info">{{ m.get_category_display }}</span></td>
+    <td>
+        <span class="pill pill--{% if m.risk_level == 'CRITICAL' or m.risk_level == 'HIGH' %}danger{% elif m.risk_level == 'MEDIUM' %}warn{% else %}ok{% endif %}">
+            {{ m.get_risk_level_display }}
+        </span>
+    </td>
+    <td>{% if m.is_active %}<span class="pill pill--ok">Active</span>{% else %}<span class="pill pill--danger">Off</span>{% endif %}</td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="6" class="text-center p-lg text-muted">No microorganisms found.</td></tr>
+{% endif %}

@@ -1,0 +1,49 @@
+{% load ilims_tags %}
+<div id="pcr-section">
+{% if show_pcr_section %}
+<div class="card mb-md">
+    <div class="card__header d-flex items-center justify-between">
+        <div>
+            <div class="card__title">PCR / qPCR Tests</div>
+            <div class="card__subtitle">{{ pcr_tests|length }} test{{ pcr_tests|length|pluralize }}</div>
+        </div>
+        {% if not is_locked %}
+        <a href="{% url 'core:test_create' %}?sample={{ sample.pk }}"
+           class="btn btn--primary btn--sm"
+           hx-get="{% url 'core:test_create' %}?modal=1&sample={{ sample.pk }}&from_detail=1"
+           hx-target="#modal-host" hx-swap="innerHTML">
+            {% icon "plus" "16" %} Register PCR/qPCR
+        </a>
+        {% endif %}
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Method</th><th>Target</th><th>Date</th><th>Detection</th><th></th></tr></thead>
+            <tbody>
+                {% for t in pcr_tests %}
+                <tr>
+                    <td><a href="{% url 'core:test_detail' t.pk %}" class="text-brand"><code>{{ t.code }}</code></a></td>
+                    <td>{{ t.test_type.name|default:"—" }}</td>
+                    <td>{{ t.target.name|default:"—" }}</td>
+                    <td>{{ t.run_date|date:"Y-m-d" }}</td>
+                    <td>
+                        {% with d=t.detection_summary %}
+                        <span class="pill pill--{% if d == 'Detected' %}danger{% elif d == 'Not detected' %}ok{% else %}warn{% endif %}">{{ d }}</span>
+                        {% endwith %}
+                    </td>
+                    <td><a href="{% url 'core:test_detail' t.pk %}" class="btn btn--ghost btn--sm">View</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center p-md">
+                        <span class="pill pill--warn">Pending</span>
+                        <span class="text-muted text-sm ml-sm">No PCR/qPCR test registered yet.</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+</div>

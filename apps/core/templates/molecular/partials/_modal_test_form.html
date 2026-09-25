@@ -1,0 +1,142 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--xl" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title|default:"Register Molecular Test" }}</h2>
+            <button type="button" class="modal__close" onclick="document.getElementById('modal-host').innerHTML=''">
+                {% icon "close" "20" %}
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'core:test_create' %}"
+              hx-post="{% url 'core:test_create' %}?modal=1"
+              hx-target="#modal-host"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url|default:'/tests/' }}">
+
+            <div class="modal__body">
+                {% if form.errors or formset.non_form_errors %}
+                <div class="message message--error mb-md" role="alert">
+                    <strong>Could not save test:</strong>
+                    <ul style="margin:6px 0 0 1.1rem;padding:0;">
+                        {% for field, errs in form.errors.items %}
+                            {% for e in errs %}<li><strong>{{ field }}:</strong> {{ e }}</li>{% endfor %}
+                        {% endfor %}
+                        {% for e in formset.non_form_errors %}<li>{{ e }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- SAMPLE FIELD -->
+                <div class="form-group">
+                    <label class="form-label form-label--required">Sample</label>
+                    <div class="d-flex gap-sm items-start">
+                        <div class="flex-1">
+                            {% if prefill_sample_pk %}
+                            <!-- PRE-FILLED: sample locked after creation from nested flow -->
+                            <div class="smart-select" data-kind="sample" data-input-id="id_sample_code" data-init="1">
+                                <div class="smart-select__input-wrap">
+                                    <input type="hidden" id="id_sample_code" name="sample_code" value="{{ prefill_sample_pk }}">
+                                    <input type="text" id="id_sample_code__text" name="sample_code__text"
+                                           class="form-input smart-select__text"
+                                           value="{{ prefill_sample_code }}"
+                                           readonly
+                                           style="background:var(--ok-light);border-color:var(--ok);">
+                                </div>
+                            </div>
+                            <div class="form-hint" style="color:var(--ok);font-weight:600;">
+                                ✓ Sample locked: {{ prefill_sample_label|default:prefill_sample_code }}
+                            </div>
+                            {% else %}
+                            {{ form.sample_code }}
+                            {% endif %}
+                        </div>
+                        {% if not prefill_sample_pk %}
+                        <a class="btn btn--secondary btn--icon"
+                           title="Register a new sample and return here"
+                           style="height:42px;width:42px;flex-shrink:0;"
+                           hx-get="{% url 'core:sample_create' %}?modal=1&return_to=test&next={% url 'core:test_list' %}"
+                           hx-target="#modal-host"
+                           hx-swap="innerHTML"
+                           href="{% url 'core:sample_create' %}?return_to=test&next={% url 'core:test_list' %}">
+                            {% icon "plus" "20" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% if form.sample_code.errors %}<div class="form-error">{{ form.sample_code.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label">Test Type (PCR / qPCR / …)</label>
+                        {{ form.test_type_name }}
+                        <div class="form-hint">Select a registered test method only.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Run Date</label>
+                        {{ form.run_date }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label">Primary Target</label>
+                        {{ form.target_name }}
+                        <div class="form-hint">Select from the microorganism catalog only.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assay Name</label>
+                        {{ form.assay_name }}
+                    </div>
+                </div>
+
+                {% if form.dna_extraction %}
+                <div class="form-group">
+                    <label class="form-label">Linked DNA Extraction</label>
+                    {{ form.dna_extraction }}
+                </div>
+                {% endif %}
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Operator</label>{{ form.operator }}</div>
+                    <div class="form-group"><label class="form-label">Instrument</label>{{ form.instrument }}</div>
+                </div>
+
+                {% if form.ct_value %}
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Ct</label>{{ form.ct_value }}</div>
+                    <div class="form-group"><label class="form-label">Ct cutoff</label>{{ form.ct_cutoff }}</div>
+                    <div class="form-group"><label class="form-label">Slope</label>{{ form.slope }}</div>
+                    <div class="form-group"><label class="form-label">R²</label>{{ form.r_squared }}</div>
+                </div>
+                {% endif %}
+
+                <div class="form-group"><label class="form-label">Notes</label>{{ form.notes }}</div>
+
+                {% if formset %}
+                <hr class="divider">
+                <h3 class="text-sm text-uppercase text-muted mb-sm">Result lines (optional)</h3>
+                {{ formset.management_form }}
+                {% for f in formset %}
+                <div class="d-grid gap-sm mb-sm p-sm border rounded" style="grid-template-columns:2fr 1.2fr 1fr 1fr auto;">
+                    <div>{{ f.microorganism }}</div>
+                    <div>{{ f.detection }}</div>
+                    <div>{{ f.ct_value }}</div>
+                    <div>{{ f.gene_target }}</div>
+                    <div>{% if f.DELETE %}{{ f.DELETE }}{% endif %}{{ f.id }}</div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="modal__footer">
+                <button type="button" class="btn btn--secondary"
+                        onclick="document.getElementById('modal-host').innerHTML=''">Cancel</button>
+                <button type="submit" class="btn btn--primary">
+                    {% icon "check" "18" %} Save Test
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

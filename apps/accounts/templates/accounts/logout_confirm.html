@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static ilims_tags %}
+
+{% block title %}Sign Out — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 420px; margin: var(--space-2xl) auto;">
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Sign Out</div>
+        </div>
+        <div class="card__body text-center">
+            <p class="mb-lg">Are you sure you want to sign out?</p>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <div class="d-flex gap-sm justify-center">
+                    <a href="{% url 'core:dashboard' %}" class="btn btn--secondary">Cancel</a>
+                    <button type="submit" class="btn btn--danger">
+                        {% icon "logout" "18" %}
+                        Sign Out
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block auth_content %}
+{# If user somehow gets here while unauthenticated #}
+<div class="login-container">
+    <div class="login-card text-center">
+        <p class="mb-lg">You are already signed out.</p>
+        <a href="{% url 'accounts:login' %}" class="btn btn--primary">Sign In</a>
+    </div>
+</div>
+{% endblock %}

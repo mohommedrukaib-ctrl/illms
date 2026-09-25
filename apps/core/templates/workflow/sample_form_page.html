@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}{{ modal_title }} — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "sample" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ modal_title|default:"Register Sample Intake" }}</h1>
+            <p>Register a food sample for analysis</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{{ next_url|default:'/samples/' }}" class="btn btn--secondary">← Back</a>
+    </div>
+</div>
+
+<div class="card max-w-lg">
+    <div class="card__body">
+        <form method="post" action="{% url 'core:sample_create' %}" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <div class="form-group">
+                <label class="form-label form-label--required">Client</label>
+                {{ form.client }}
+                {% if form.client.errors %}<div class="form-error">{{ form.client.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="form-label form-label--required">Sample Type</label>
+                    {{ form.sample_type }}
+                    {% if form.sample_type.errors %}<div class="form-error">{{ form.sample_type.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Received Date</label>
+                    {{ form.received_date }}
+                </div>
+            </div>
+
+            {% if form.production_date %}
+            <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="form-label">Production Date</label>
+                    {{ form.production_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expiry Date</label>
+                    {{ form.expiry_date }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if form.assigned_to %}
+            <div class="form-group">
+                <label class="form-label">Assigned Technician</label>
+                {{ form.assigned_to }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label">Remarks</label>
+                {{ form.remarks }}
+            </div>
+
+            <div class="d-flex justify-end gap-sm mt-lg">
+                <a href="{{ next_url|default:'/samples/' }}" class="btn btn--secondary">Cancel</a>
+                <button type="submit" class="btn btn--primary">{% icon "check" "18" %} Register Sample</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

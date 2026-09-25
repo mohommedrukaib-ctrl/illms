@@ -1,0 +1,45 @@
+{% load ilims_tags %}
+<div id="dna-section">
+{% if show_dna_section %}
+<div class="card mb-md">
+    <div class="card__header d-flex items-center justify-between">
+        <div>
+            <div class="card__title">DNA Extractions</div>
+            <div class="card__subtitle">{{ dna_extractions.count }} extraction run{{ dna_extractions.count|pluralize }}</div>
+        </div>
+        {% if not is_locked %}
+        <a href="{% url 'core:dna_create' %}?sample={{ sample.pk }}"
+           class="btn btn--primary btn--sm"
+           hx-get="{% url 'core:dna_create' %}?modal=1&sample={{ sample.pk }}&from_detail=1"
+           hx-target="#modal-host" hx-swap="innerHTML">
+            {% icon "plus" "16" %} Log Extraction
+        </a>
+        {% endif %}
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Method</th><th>Date</th><th>Operator</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for d in dna_extractions %}
+                <tr>
+                    <td><a href="{% url 'core:dna_detail' d.pk %}" class="text-brand"><code>{{ d.code }}</code></a></td>
+                    <td>{{ d.method.name|default:"—" }}</td>
+                    <td>{{ d.extraction_date|date:"Y-m-d" }}</td>
+                    <td>{{ d.operator.get_short_name|default:"—" }}</td>
+                    <td><span class="pill pill--ok">Completed</span></td>
+                    <td><a href="{% url 'core:dna_detail' d.pk %}" class="btn btn--ghost btn--sm">View</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center p-md">
+                        <span class="pill pill--warn">Pending</span>
+                        <span class="text-muted text-sm ml-sm">No DNA extraction logged yet.</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+</div>

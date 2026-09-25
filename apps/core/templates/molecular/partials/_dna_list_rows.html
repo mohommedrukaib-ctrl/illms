@@ -1,0 +1,16 @@
+{% load ilims_tags %}
+{% if extractions %}
+{% for e in extractions %}
+<tr>
+    <td><a href="{% url 'core:dna_detail' e.pk %}" class="text-brand text-bold"><code class="text-mono">{{ e.code }}</code></a></td>
+    <td>{{ e.sample.code }}<br><span class="text-xs text-muted">{{ e.sample.client.name }}</span></td>
+    <td>{{ e.get_method_display }}</td>
+    <td>{{ e.extraction_date|date:"Y-m-d" }}</td>
+    <td>{{ e.operator.get_short_name|default:"—" }}</td>
+    <td><span class="pill pill--{% if e.status == 'COMPLETED' %}ok{% elif e.status == 'FAILED' %}danger{% else %}warn{% endif %}">{{ e.get_status_display }}</span></td>
+    <td class="text-right"><a href="{% url 'core:dna_detail' e.pk %}" class="btn btn--ghost btn--sm">View</a></td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="7" class="text-center p-lg text-muted">No DNA extractions yet.</td></tr>
+{% endif %}

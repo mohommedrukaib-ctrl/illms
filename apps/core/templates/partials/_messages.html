@@ -1,0 +1,16 @@
+{% comment %}
+Container for Django messages.
+The div#toast-host is the OOB target for HTMX-pushed toasts.
+{% endcomment %}
+<div class="messages{% if noscript %} messages--noscript{% endif %}"
+     id="toast-host"
+     role="alert"
+     aria-live="polite">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message message--{{ message.tags|default:'info' }}" data-auto-dismiss>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>

@@ -1,0 +1,270 @@
+/* ═══════════════════════════════════════════════════════════════
+   ILIMS Design System — CSS Custom Properties & Base Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Color Tokens ─── */
+:root,
+[data-theme="light"] {
+    /* Brand */
+    --brand: #0f9b8e;
+    --brand-deep: #0d6f77;
+    --brand-light: #e6f7f5;
+    --accent: #f0a92b;
+    --accent-light: #fef6e4;
+
+    /* Semantic */
+    --ok: #17a673;
+    --ok-light: #e6f8f0;
+    --warn: #e6a117;
+    --warn-light: #fef6e4;
+    --danger: #dc4f4f;
+    --danger-light: #fde8e8;
+    --info: #2f8ded;
+    --info-light: #e8f2fd;
+
+    /* Sidebar */
+    --sidebar-bg: #0d1b2a;
+    --sidebar-text: #8899aa;
+    --sidebar-text-active: #ffffff;
+    --sidebar-hover: #162a3e;
+    --sidebar-accent: var(--brand);
+    --sidebar-width: 260px;
+
+    /* Surfaces */
+    --bg-body: #f0f2f5;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8f9fa;
+    --bg-input: #ffffff;
+    --bg-modal-overlay: rgba(13, 27, 42, 0.5);
+
+    /* Borders */
+    --border-color: #e2e6ea;
+    --border-color-strong: #ccd1d6;
+    --border-radius: 8px;
+    --border-radius-sm: 4px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+
+    /* Text */
+    --text-primary: #1a2332;
+    --text-secondary: #5a6775;
+    --text-muted: #8899aa;
+    --text-inverse: #ffffff;
+    --text-link: var(--brand);
+
+    /* Topbar */
+    --topbar-bg: #ffffff;
+    --topbar-height: 60px;
+    --topbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+
+    /* Focus */
+    --focus-ring: 0 0 0 3px rgba(15, 155, 142, 0.35);
+    --focus-ring-danger: 0 0 0 3px rgba(220, 79, 79, 0.35);
+
+    /* Z-index scale */
+    --z-sidebar: 100;
+    --z-topbar: 200;
+    --z-modal-overlay: 300;
+    --z-modal: 400;
+    --z-toast: 500;
+    --z-tooltip: 600;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+
+    /* Typography */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.8125rem;
+    --font-size-base: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+}
+
+[data-theme="dark"] {
+    --bg-body: #0f1923;
+    --bg-card: #162a3e;
+    --bg-card-hover: #1a3248;
+    --bg-input: #1a3248;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.6);
+
+    --border-color: #243648;
+    --border-color-strong: #2d4560;
+
+    --text-primary: #e4e8ec;
+    --text-secondary: #8899aa;
+    --text-muted: #5a6775;
+    --text-link: #3abfb0;
+
+    --topbar-bg: #162a3e;
+    --topbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    --brand-light: #0d2f2d;
+    --ok-light: #0d2f25;
+    --warn-light: #2f2810;
+    --danger-light: #2f1515;
+    --info-light: #102540;
+    --accent-light: #2f2810;
+}
+
+/* ─── Reset & Base ─── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    background-color: var(--bg-body);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: var(--text-link);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ─── Focus Styles (WCAG AA) ─── */
+:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* ─── Skip Link ─── */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--brand);
+    color: var(--text-inverse);
+    border-radius: var(--border-radius-sm);
+    z-index: 9999;
+    font-weight: 600;
+}
+
+.skip-link:focus {
+    top: var(--space-sm);
+}
+
+/* ─── Layout ─── */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: margin-left var(--transition-base);
+}
+
+.app-content {
+    flex: 1;
+    padding: var(--space-lg);
+    padding-top: calc(var(--topbar-height) + var(--space-lg));
+}
+
+/* ─── Noscript banner ─── */
+.noscript-banner {
+    background: var(--warn-light);
+    border-bottom: 2px solid var(--warn);
+    color: var(--text-primary);
+    padding: var(--space-sm) var(--space-md);
+    text-align: center;
+    font-size: var(--font-size-sm);
+}
+
+.noscript-banner strong {
+    color: var(--warn);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color-strong);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+    .app-main {
+        margin-left: 0;
+    }
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .app-content {
+        padding: var(--space-md);
+        padding-top: calc(var(--topbar-height) + var(--space-md));
+    }
+}

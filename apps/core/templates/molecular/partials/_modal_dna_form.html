@@ -1,0 +1,112 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--lg" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title|default:"Log DNA Extraction" }}</h2>
+            <button type="button" class="modal__close" onclick="document.getElementById('modal-host').innerHTML=''">
+                {% icon "close" "20" %}
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'core:dna_create' %}"
+              hx-post="{% url 'core:dna_create' %}?modal=1"
+              hx-target="#modal-host"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url|default:'/dna/' }}">
+
+            <div class="modal__body">
+                {% if form.errors %}
+                <div class="message message--error mb-md" role="alert">
+                    <strong>Could not save extraction:</strong>
+                    <ul style="margin:6px 0 0 1.1rem;padding:0;">
+                        {% for field, errs in form.errors.items %}
+                            {% for e in errs %}<li><strong>{{ field }}:</strong> {{ e }}</li>{% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- SAMPLE FIELD -->
+                <div class="form-group">
+                    <label class="form-label form-label--required">Sample</label>
+                    <div class="d-flex gap-sm items-start">
+                        <div class="flex-1">
+                            {% if prefill_sample_pk %}
+                            <!-- PRE-FILLED: sample locked after creation from nested flow -->
+                            <div class="smart-select" data-kind="sample" data-input-id="id_sample_code" data-init="1">
+                                <div class="smart-select__input-wrap">
+                                    <input type="hidden" id="id_sample_code" name="sample_code" value="{{ prefill_sample_pk }}">
+                                    <input type="text" id="id_sample_code__text" name="sample_code__text"
+                                           class="form-input smart-select__text"
+                                           value="{{ prefill_sample_code }}"
+                                           readonly
+                                           style="background:var(--ok-light);border-color:var(--ok);">
+                                </div>
+                            </div>
+                            <div class="form-hint" style="color:var(--ok);font-weight:600;">
+                                ✓ Sample locked: {{ prefill_sample_label|default:prefill_sample_code }}
+                            </div>
+                            {% else %}
+                            <!-- NORMAL: SmartSelect with + button -->
+                            {{ form.sample_code }}
+                            {% endif %}
+                        </div>
+                        {% if not prefill_sample_pk %}
+                        <a class="btn btn--secondary btn--icon"
+                           title="Register a new sample and return here"
+                           style="height:42px;width:42px;flex-shrink:0;"
+                           hx-get="{% url 'core:sample_create' %}?modal=1&return_to=dna&next={% url 'core:dna_list' %}"
+                           hx-target="#modal-host"
+                           hx-swap="innerHTML"
+                           href="{% url 'core:sample_create' %}?return_to=dna&next={% url 'core:dna_list' %}">
+                            {% icon "plus" "20" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% if form.sample_code.errors %}<div class="form-error">{{ form.sample_code.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label">Extraction Method</label>
+                        {{ form.method_name }}
+                        <div class="form-hint">Select a registered method only.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Extraction Date</label>
+                        {{ form.extraction_date }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Kit Name</label>{{ form.kit_name }}</div>
+                    <div class="form-group"><label class="form-label">Operator</label>{{ form.operator }}</div>
+                </div>
+
+                {% if form.concentration_ng_ul %}
+                <hr class="divider">
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+                    <div class="form-group"><label class="form-label">Conc. ng/µL</label>{{ form.concentration_ng_ul }}</div>
+                    <div class="form-group"><label class="form-label">A260/280</label>{{ form.purity_260_280 }}</div>
+                    <div class="form-group"><label class="form-label">A260/230</label>{{ form.purity_260_230 }}</div>
+                    <div class="form-group"><label class="form-label">Volume µL</label>{{ form.volume_ul }}</div>
+                </div>
+                {% endif %}
+
+                <div class="form-group mt-md">
+                    <label class="form-label">Notes</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+
+            <div class="modal__footer">
+                <button type="button" class="btn btn--secondary"
+                        onclick="document.getElementById('modal-host').innerHTML=''">Cancel</button>
+                <button type="submit" class="btn btn--primary">
+                    {% icon "check" "18" %} Save Extraction
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

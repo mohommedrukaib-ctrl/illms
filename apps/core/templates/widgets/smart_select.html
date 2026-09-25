@@ -1,0 +1,64 @@
+{% load ilims_tags %}
+<div class="smart-select"
+     data-kind="{{ widget.kind_key }}"
+     data-input-id="{{ widget.input_id }}">
+
+    <div class="smart-select__input-wrap">
+        <input type="hidden"
+               id="{{ widget.input_id }}"
+               name="{{ widget.name }}"
+               value="{{ widget.value|default:'' }}">
+
+        <input type="text"
+               id="{{ widget.input_id }}__text"
+               name="{{ widget.name }}__text"
+               class="form-input smart-select__text"
+               value="{{ widget.selected_display }}"
+               placeholder="Type to search {{ widget.kind_label|lower }}…"
+               autocomplete="off"
+               role="combobox"
+               aria-autocomplete="list"
+               aria-controls="{{ widget.input_id }}__results"
+               aria-expanded="false"
+               list="{{ widget.input_id }}__datalist"
+               hx-get="{{ widget.results_url }}?field={{ widget.name }}&input_id={{ widget.input_id }}"
+hx-trigger="keyup changed delay:180ms, focus"
+hx-target="#{{ widget.input_id }}__results"
+hx-swap="innerHTML"
+hx-include="this">
+
+        <datalist id="{{ widget.input_id }}__datalist">
+            {% for item in widget.datalist_items %}
+            <option value="{{ item.value }}">{{ item.code }}{% if item.sub %} — {{ item.sub }}{% endif %}</option>
+            {% endfor %}
+        </datalist>
+    </div>
+
+    <div id="{{ widget.input_id }}__results"
+         class="smart-select__results"
+         role="listbox"
+         aria-label="{{ widget.kind_label }} suggestions"></div>
+
+    <div class="smart-select__actions">
+        <a href="{{ widget.picker_url }}?field={{ widget.name }}&amp;next={{ widget.next_url|urlencode }}"
+           class="smart-select__link">
+            {% icon "search" "14" %} Browse list →
+        </a>
+        {% if widget.allow_create %}
+        <a href="{{ widget.create_url }}?next={{ widget.next_url|urlencode }}"
+           class="smart-select__link smart-select__link--create"
+           hx-get="{{ widget.create_url }}?modal=1"
+           hx-target="#modal-host"
+           hx-swap="innerHTML">
+            {% icon "plus" "14" %} Add new {{ widget.kind_label|lower }}
+        </a>
+        {% endif %}
+    </div>
+
+    <noscript>
+        <p class="smart-select__hint">
+            JavaScript is off. Type the full {{ widget.kind_label|lower }} name and submit,
+            or use <a href="{{ widget.picker_url }}?field={{ widget.name }}&amp;next={{ widget.next_url|urlencode }}">Browse list</a>.
+        </p>
+    </noscript>
+</div>

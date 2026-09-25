@@ -1,0 +1,7 @@
+-- Run as postgres superuser
+CREATE USER ilims_user WITH PASSWORD 'ilims_password';
+CREATE DATABASE ilims_db OWNER ilims_user;
+GRANT ALL PRIVILEGES ON DATABASE ilims_db TO ilims_user;
+-- Grant schema permissions (PostgreSQL 15+ requirement)
+\c ilims_db
+GRANT ALL ON SCHEMA public TO ilims_user;

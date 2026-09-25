@@ -1,0 +1,20 @@
+{% if tests %}
+{% for t in tests %}
+<tr>
+    <td><a href="{% url 'core:test_detail' t.pk %}" class="text-brand text-bold"><code class="text-mono">{{ t.code }}</code></a></td>
+    <td>{{ t.sample.code }}</td>
+    <td>{{ t.get_test_type_display }}</td>
+    <td>{{ t.target.name|default:"—" }}</td>
+    <td>{{ t.run_date|date:"Y-m-d" }}</td>
+    <td>
+        {% with d=t.detection_summary %}
+        <span class="pill pill--{% if d == 'Detected' %}danger{% elif d == 'Not detected' %}ok{% else %}warn{% endif %}">{{ d }}</span>
+        {% endwith %}
+    </td>
+    <td>{{ t.get_status_display }}</td>
+    <td class="text-right"><a href="{% url 'core:test_detail' t.pk %}" class="btn btn--ghost btn--sm">View</a></td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="8" class="text-center p-lg text-muted">No molecular tests yet.</td></tr>
+{% endif %}
