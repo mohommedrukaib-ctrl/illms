@@ -1,0 +1,26 @@
+{% if is_paginated %}
+<div class="pagination" style="padding: 16px 24px; border-top: 1px solid var(--border-color); background: var(--bg-card);">
+    <div class="pagination__info text-sm text-muted">
+        Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ paginator.count }}</strong> records
+    </div>
+    <div class="pagination__links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_state %}&state={{ current_state|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}" class="pagination__link" title="First Page">«</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_state %}&state={{ current_state|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}" class="pagination__link">Previous</a>
+        {% else %}
+            <span class="pagination__link disabled">«</span>
+            <span class="pagination__link disabled">Previous</span>
+        {% endif %}
+
+        <span class="pagination__link active">{{ page_obj.number }} / {{ paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_state %}&state={{ current_state|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}" class="pagination__link">Next</a>
+            <a href="?page={{ paginator.num_pages }}{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_state %}&state={{ current_state|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}" class="pagination__link" title="Last Page">»</a>
+        {% else %}
+            <span class="pagination__link disabled">Next</span>
+            <span class="pagination__link disabled">»</span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}     

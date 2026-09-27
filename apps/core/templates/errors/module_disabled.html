@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Module Deactivated — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon" style="background: var(--warn-light); color: var(--warn);">
+            {% icon "settings" "24" %}
+        </div>
+        <div class="page-header__text">
+            <h1>Module Deactivated</h1>
+            <p>This functional workflow is currently turned off</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:dashboard' %}" class="btn btn--secondary">← Return to Dashboard</a>
+    </div>
+</div>
+
+<div class="card max-w-lg mx-auto text-center" style="margin: 40px auto;">
+    <div class="card__body p-xl">
+        <div class="stat-card__icon mx-auto mb-md" style="margin: 0 auto 16px auto; background: var(--warn-light); color: var(--warn); width: 64px; height: 64px; border-radius: 50%;">
+            {% icon "lock" "32" %}
+        </div>
+        <h2 class="text-xl text-bold mb-xs">The <code>{{ module_name }}</code> module is deactivated</h2>
+        <p class="text-secondary text-sm mb-lg">
+            This module (<code>{{ flag_key }}</code>) has been temporarily disabled in your system settings.
+            All underlying records and audit logs remain safely preserved in the database.
+        </p>
+
+        {% if request.user.is_superuser or request.user.role == 'ADMIN' %}
+        <div class="p-md border rounded bg-card-hover mb-lg text-left" style="border-left: 3px solid var(--brand);">
+            <div class="text-xs text-brand text-bold mb-xs">Administrator Quick Action:</div>
+            <p class="text-xs text-secondary mb-sm">
+                As an Administrator, you can re-enable this module instantly without restarting the application server.
+            </p>
+            <a href="{% url 'core:settings_hub' %}?tab=features" class="btn btn--primary btn--sm">
+                {% icon "settings" "16" %} Enable in Settings Hub → Feature Flags
+            </a>
+        </div>
+        {% else %}
+        <p class="text-muted text-xs">
+            If your laboratory testing requires this diagnostic or quality workflow, please contact your ILIMS system administrator to activate it.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

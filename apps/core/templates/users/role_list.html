@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Roles & Access — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "users" "24" %}</div>
+        <div class="page-header__text">
+            <h1>Roles & Access</h1>
+            <p>Define roles and choose which modules each role can open</p>
+        </div>
+    </div>
+    <div class="page-header__right d-flex gap-sm">
+        <a href="{% url 'core:users_list' %}" class="btn btn--secondary">← Users</a>
+        <a href="{% url 'core:role_create' %}?modal=1"
+           class="btn btn--primary"
+           hx-get="{% url 'core:role_create' %}?modal=1"
+           hx-target="#modal-host"
+           hx-swap="innerHTML">
+            {% icon "plus" "18" %} New Role
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Code</th>
+                    <th>Lab Scope</th>
+                    <th>Modules</th>
+                    <th>Flags</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr>
+                    <td>
+                        <strong>{{ role.name }}</strong>
+                        {% if role.is_system %}<span class="pill pill--info text-xs">System</span>{% endif %}
+                        {% if role.description %}<div class="text-xs text-muted">{{ role.description|truncatechars:80 }}</div>{% endif %}
+                    </td>
+                    <td><code class="text-mono">{{ role.code }}</code></td>
+                    <td>{{ role.get_lab_scope_display }}</td>
+                    <td>
+                        <span class="text-xs">
+                            {% for k,v in role.modules.items %}{% if v %}{{ k|cut:"module." }} {% endif %}{% endfor %}
+                        </span>
+                    </td>
+                    <td class="text-xs">
+                        {% if role.can_manage_users %}Users {% endif %}
+                        {% if role.can_manage_roles %}Roles {% endif %}
+                        {% if role.can_manage_settings %}Settings {% endif %}
+                        {% if role.can_approve_qc %}QC {% endif %}
+                    </td>
+                    <td>
+                        {% if role.is_active %}<span class="pill pill--ok">Active</span>
+                        {% else %}<span class="pill pill--danger">Off</span>{% endif %}
+                    </td>
+                    <td class="text-right d-flex gap-sm justify-end">
+                        <a href="{% url 'core:role_create' %}?edit={{ role.pk }}&modal=1"
+                           class="btn btn--secondary btn--sm"
+                           hx-get="{% url 'core:role_create' %}?edit={{ role.pk }}&modal=1"
+                           hx-target="#modal-host"
+                           hx-swap="innerHTML">Edit</a>
+                        {% if not role.is_system %}
+                        <form method="post" action="{% url 'core:role_delete' role.pk %}" onsubmit="return confirm('Delete this role?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn--ghost btn--sm">Delete</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted">No roles yet. Run Role.seed_defaults().</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

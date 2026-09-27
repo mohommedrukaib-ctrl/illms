@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static ilims_tags %}
+
+{% block title %}Two-Factor Authentication — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card" style="max-width: 420px; margin: 0 auto;">
+        <div class="login-header">
+            <div class="login-logo" aria-hidden="true">IL</div>
+            <h1 class="login-title">Two-Factor Authentication</h1>
+            <p class="login-subtitle">Enter the 6-digit code from your authenticator app</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message message--{{ message.tags }} mb-md" role="alert">
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:verify_2fa' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group text-center">
+                <label for="id_otp_token" class="form-label form-label--required">
+                    Authentication Code
+                </label>
+                <input type="text"
+                       id="id_otp_token"
+                       name="otp_token"
+                       class="form-input form-input--code"
+                       style="margin: 0 auto;"
+                       placeholder="000000"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       pattern="[0-9]{6}"
+                       maxlength="6"
+                       required
+                       autofocus>
+                {% if form.otp_token.errors %}
+                <div class="form-error" role="alert">
+                    {% for error in form.otp_token.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md">
+                {% icon "check" "18" %}
+                Verify Code
+            </button>
+        </form>
+
+        <div class="text-center mt-lg">
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--ghost text-sm">
+                    Cancel and sign out
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

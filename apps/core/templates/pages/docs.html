@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}User Manual — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "report" "24" %}</div>
+        <div class="page-header__text">
+            <h1>Interactive User Manual</h1>
+            <p>Comprehensive operational guide for the Food Safety Molecular Analysis Portal</p>
+        </div>
+    </div>
+</div>
+
+<!-- Table of Contents -->
+<div class="card mb-lg animate-fade-in">
+    <div class="card__header"><div class="card__title">Table of Contents</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-md" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div>
+                <div class="text-xs text-uppercase text-muted mb-xs">System Overview</div>
+                <ul style="padding-left:1.1rem; line-height:2;">
+                    <li><a href="#intro" class="text-brand">Workflow & Architecture</a></li>
+                    <li><a href="#auth" class="text-brand">Authentication & Role Matrix</a></li>
+                    <li><a href="#dashboard" class="text-brand">Dashboard Analytics</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="text-xs text-uppercase text-muted mb-xs">Lab Workflows</div>
+                <ul style="padding-left:1.1rem; line-height:2;">
+                    <li><a href="#samples" class="text-brand">Sample Registration</a></li>
+                    <li><a href="#dna" class="text-brand">DNA Extraction Records</a></li>
+                    <li><a href="#testing" class="text-brand">Molecular Testing (PCR)</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="text-xs text-uppercase text-muted mb-xs">Compliance & System</div>
+                <ul style="padding-left:1.1rem; line-height:2;">
+                    <li><a href="#qc" class="text-brand">QC & Four-Eyes Verification</a></li>
+                    <li><a href="#reports" class="text-brand">PDF Safety Reports</a></li>
+                    <li><a href="#audit" class="text-brand">Hash-Chained Audit Trail</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 1: Introduction -->
+<div class="card mb-lg" id="intro">
+    <div class="card__header"><div class="card__title">System Overview & Architecture</div></div>
+    <div class="card__body">
+        <p class="mb-md">
+            The **Food Safety Molecular Analysis Portal** is a production-grade, secure, and decision-support module built 
+            upon the shared **ILIMS Core** database. It tracks biological specimens from registration/intake, through molecular 
+            isolation and assay execution, to quality review, cryptographic logging, and final safety reporting.
+        </p>
+        <div class="message message--info">
+            <strong>Decision-Support Scope:</strong> This software is a data aggregator and analytical interpreter. 
+            It records laboratory-confirmed test results and automates compliance reporting; it does not replace wet-lab chemistry or manual diagnostic verification.
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Authentication & Roles -->
+<div class="card mb-lg" id="auth">
+    <div class="card__header"><div class="card__title">Authentication, Security, & Role Matrix</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-lg" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 class="text-md text-semibold mb-sm">Role-Based Access Control (RBAC)</h3>
+                <p class="text-sm mb-md text-secondary">
+                    Users are assigned to one of five roles. Access control is enforced at both the URL router level and 
+                    the database query/object level.
+                </p>
+                <table class="table">
+                    <thead><tr><th>Role</th><th>Primary Authority</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>TECHNICIAN</code></td><td>Intake, DNA extractions, batching</td></tr>
+                        <tr><td><code>ANALYST</code></td><td>PCR/qPCR execution, sequencing, raw results log</td></tr>
+                        <tr><td><code>QC_OFFICER</code></td><td>Verification queue, four-eyes check, safety classification</td></tr>
+                        <tr><td><code>FOOD_SAFETY_OFFICER</code></td><td>Report analysis, global catalog view, alerts consumption</td></tr>
+                        <tr><td><code>ADMIN</code></td><td>Geographics, prefixes, feature flags, user management</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 class="text-md text-semibold mb-sm">Hardened Security Architecture</h3>
+                <ul style="padding-left:1.1rem; line-height:2.1;" class="text-sm text-secondary">
+                    <li>🔒 <strong>Argon2id Hashing:</strong> Safe from GPU-accelerated brute-force attacks.</li>
+                    <li>🔒 <strong>Axes Lockout:</strong> Enforces login lockout after 5 failed attempts for 15 minutes.</li>
+                    <li>🔒 <strong>Secure serving:</strong> Uploaded avatars and generated report PDFs are validated via magic-bytes (preventing execution attacks) and served only through permission-checked views.</li>
+                    <li>🔒 <strong>CSP Enforced:</strong> Strict Content Security Policies reject all unapproved inline scripts.</li>
+                    <li>🔒 <strong>Object Scoping:</strong> Technicians and Analysts are strictly isolated to their assigned regional laboratory facility.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 3: Samples -->
+<div class="card mb-lg" id="samples">
+    <div class="card__header"><div class="card__title">Food Specimen Registration & Intake</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-lg" style="grid-template-columns: 1.2fr 1fr;">
+            <div>
+                <h3 class="text-md text-semibold mb-sm">Interactive registration guide</h3>
+                <ol style="padding-left:1.1rem; line-height:2;" class="text-sm text-secondary">
+                    <li>Navigate to the <strong>Intake Samples Directory</strong> and select **Register Sample**.</li>
+                    <li>Choose a client using the <strong>SmartSelect Type-Ahead input</strong> (just start typing to see options).</li>
+                    <li>Enter product details. Selecting a **Product Category** (e.g. Food) automatically unlocks the dependent **Product Types** (e.g. ready-to-eat) cascading options.</li>
+                    <li>Declare the **Molecular Workflow** (DNA Isolation, qPCR, or Sanger Sequencing). The system auto-filters matching laboratory assay methods dynamically.</li>
+                    <li>Set priorities and storage conditions (ambient, chilled, or frozen).</li>
+                    <li>On submission, the system generates a race-safe custom serial code (e.g., <code>FS-LK-WP-2026-00042</code>) and triggers a printable PDF laboratory receipt.</li>
+                </ol>
+            </div>
+            <div>
+                <div class="p-md border rounded bg-card-hover text-center">
+                    <h4 class="text-brand mb-sm">SLA and Deadline Target</h4>
+                    <p class="text-xs text-secondary leading-6">
+                        SLA timers (Due Dates) are automatically computed at registration using global turnaround limits configured in settings (Normal vs. Urgent timelines), with support for calendar working-day calculations (excluding regional holidays/weekends).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 4: Molecular Testing -->
+<div class="card mb-lg" id="dna">
+    <div class="card__header"><div class="card__title">Molecular Laboratory Diagnostics Workflow</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-lg" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 class="text-md text-semibold mb-sm">Stage 1: DNA Isolation & Purity</h3>
+                <p class="text-sm text-secondary leading-6 mb-md">
+                    Isolate genetic materials from food matrices. Logs method, kit references, and date.
+                    Under standard mode, you can capture full purity criteria: **concentration (ng/µL)**, 
+                    and **A260/280 / A260/230 absorbance ratios** to evaluate extraction quality before PCR runs.
+                </p>
+                <span class="pill pill--brand">Advances State: received → testing</span>
+            </div>
+            <div>
+                <h3 class="text-md text-semibold mb-sm">Stage 2: Assay / PCR & Results Entry</h3>
+                <p class="text-sm text-secondary leading-6 mb-md">
+                    Analysts run molecular tests (qPCR or Sequencing) targeting specific pathogens.
+                    Input raw Ct values alongside cutoffs. The platform automatically flags positive detections 
+                    (e.g., Salmonella target amplification with Ct &lt; 35).
+                </p>
+                <span class="pill pill--warn">Advances State: testing → analysis</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 5: QC & Four-Eyes -->
+<div class="card mb-lg" id="qc">
+    <div class="card__header"><div class="card__title">Quality Control & The Four-Eyes Rule</div></div>
+    <div class="card__body">
+        <div class="message message--warning mb-md" role="alert">
+            <strong>Security Boundary (Four-Eyes Rule):</strong> The Analyst or Technician who performed the laboratory test 
+            is cryptographically blocked from reviewing and verifying their own results. Another QC Officer must log in to authorize the record.
+        </div>
+        <div class="d-grid gap-lg" style="grid-template-columns: 1.2fr 1fr;">
+            <div>
+                <p class="text-sm text-secondary leading-6 mb-md">
+                    Upon Molecular Test registration, a pending **QcRecord** is automatically mapped and added to the **QC Queue**. 
+                    QC Officers inspect the amplification logs, Ct values, and positive targets. 
+                    They apply a final **Safety Classification** (Safe / Unsafe / Needs Review) and notes.
+                </p>
+                <ul style="padding-left:1.1rem; line-height:2.1;" class="text-sm text-secondary">
+                    <li>🟢 <strong>Approved (Safe):</strong> Specimen advances to **Report Preparation**</li>
+                    <li>🔴 <strong>Rejected (Unsafe):</strong> Specimen is flagged and moved to **Rejected** state</li>
+                    <li>🔵 <strong>Send Back for Rework:</strong> Resets state back to **Testing** for rerun extraction</li>
+                </ul>
+            </div>
+            <div class="text-center p-md border rounded bg-card-hover">
+                <div class="text-2xl text-bold text-brand mb-xs">Accreditation Ready</div>
+                <div class="text-xs text-secondary leading-5">
+                    All QC decisions are permanently archived in the **QC Compliance Log**, establishing an audit-ready, 
+                    exportable checklist required for ISO 17025 laboratory accreditations.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 6: Reports & PDF -->
+<div class="card mb-lg" id="reports">
+    <div class="card__header"><div class="card__title">PDF Reports & Deliverables Export</div></div>
+    <div class="card__body">
+        <p class="text-sm text-secondary leading-6 mb-md">
+            Approved samples undergo final reporting. Clicking **Generate Report** compiles all extraction metrics, 
+            amplification Ct values, QC approvals, and pathogen detections into a styled **A4 PDF Document** matching the ILIMS design spec.
+        </p>
+        <h3 class="text-md text-semibold mb-sm">The 6 Mandatory Regulatory Deliverables</h3>
+        <div class="d-grid gap-md" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <div class="p-sm border rounded">
+                <div class="text-semibold text-brand">1. Food Safety Report (PDF)</div>
+                <div class="text-xs text-secondary mt-xs">A4 printable document served from a protected path for secure client delivery.</div>
+            </div>
+            <div class="p-sm border rounded">
+                <div class="text-semibold text-brand">2. Molecular Test Summary</div>
+                <div class="text-xs text-secondary mt-xs">Interactive detail view showing extraction records, instrument runs, and operator timelines.</div>
+            </div>
+            <div class="p-sm border rounded">
+                <div class="text-semibold text-brand">3. Pathogen Detection Log</div>
+                <div class="text-xs text-secondary mt-xs">Cross-sample directory showing positive targets and raw Ct amplifications.</div>
+            </div>
+            <div class="p-sm border rounded">
+                <div class="text-semibold text-brand">4. Batch Traceability Report</div>
+                <div class="text-xs text-secondary mt-xs">Grouping of samples by production batch to trace raw materials contamination back to source suppliers.</div>
+            </div>
+            <div class="p-sm border rounded">
+                <div class="text-semibold text-brand">5. QC Compliance Log</div>
+                <div class="text-xs text-secondary mt-xs">Chronological timeline of reviewer decisions, notes, and approval timestamps.</div>
+            </div>
+            <div class="p-sm border rounded">
+                <div class="text-semibold text-brand">6. Audit Trail Export (CSV)</div>
+                <div class="text-xs text-secondary mt-xs">Export the full hash-chained audit log as a CSV for security auditors.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 7: Audit Trail -->
+<div class="card" id="audit">
+    <div class="card__header"><div class="card__title">Immutable SHA-256 Chained Audit Trail</div></div>
+    <div class="card__body">
+        <p class="text-sm text-secondary leading-6 mb-md">
+            Every database write, status advancement, QC review, PDF generation, or CSV export records an entry to the shared **ILIMS Audit Log**. 
+            Each record is bound using an **append-only SHA-256 hash-chaining structure** similar to a blockchain ledger.
+        </p>
+        <div class="p-md border rounded bg-card-hover mb-lg text-xs leading-5">
+            <div class="text-semibold text-brand mb-xs">How the Hash Chain Works:</div>
+            <div>For any record $N$: <code>Hash = SHA-256( Hash(N-1) + Timestamp + User + Action + Model + RecordID + ChangesJSON )</code></div>
+            <div class="mt-xs">If any database row is altered, deleted, or inserted out of order, the chain signature breaks!</div>
+        </div>
+        <h3 class="text-md text-semibold mb-sm">Hash Verification Console</h3>
+        <p class="text-sm text-secondary mb-md">
+            Clicking **Verify Hash Chain** inside the Audit Log View executes a real-time integrity check, recalculating 
+            the expected hashes sequentially from genesis to detect any database tampering.
+        </p>
+    </div>
+</div>
+{% endblock %}

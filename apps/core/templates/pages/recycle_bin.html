@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Recycle Bin — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "settings" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }} ({{ total }} item{{ total|pluralize }})</p>
+        </div>
+    </div>
+</div>
+
+{% if total == 0 %}
+<div class="card"><div class="card__body text-center p-lg">
+    <div class="text-ok text-2xl mb-sm">✓</div>
+    <div class="text-lg text-bold">Recycle Bin is Empty</div>
+    <div class="text-muted text-sm">No soft-deleted records found.</div>
+</div></div>
+{% endif %}
+
+{% if clients %}
+<div class="card mb-md">
+    <div class="card__header"><div class="card__title">Deleted Clients ({{ clients|length }})</div></div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Name</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for c in clients %}
+            <tr>
+                <td><code>{{ c.code }}</code></td>
+                <td>{{ c.name }}</td>
+                <td>
+                    <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="type" value="client"><input type="hidden" name="id" value="{{ c.pk }}"><button name="action" value="restore" class="btn btn--ghost btn--sm" style="color:var(--ok);">Restore</button><button name="action" value="hard_delete" class="btn btn--ghost btn--sm" style="color:var(--danger);" onclick="return confirm('Permanently delete?');">Delete Forever</button></form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if samples %}
+<div class="card mb-md">
+    <div class="card__header"><div class="card__title">Deleted Samples ({{ samples|length }})</div></div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Product</th><th>Client</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for s in samples %}
+            <tr>
+                <td><code>{{ s.code }}</code></td>
+                <td>{{ s.product_name }}</td>
+                <td>{{ s.client.name }}</td>
+                <td>
+                    <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="type" value="sample"><input type="hidden" name="id" value="{{ s.pk }}"><button name="action" value="restore" class="btn btn--ghost btn--sm" style="color:var(--ok);">Restore</button><button name="action" value="hard_delete" class="btn btn--ghost btn--sm" style="color:var(--danger);" onclick="return confirm('Permanently delete?');">Delete Forever</button></form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if batches %}
+<div class="card mb-md">
+    <div class="card__header"><div class="card__title">Deleted Batches ({{ batches|length }})</div></div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Lot</th><th>Client</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for b in batches %}
+            <tr>
+                <td><code>{{ b.code }}</code></td>
+                <td>{{ b.batch_number }}</td>
+                <td>{{ b.client.name }}</td>
+                <td>
+                    <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="type" value="food_batch"><input type="hidden" name="id" value="{{ b.pk }}"><button name="action" value="restore" class="btn btn--ghost btn--sm" style="color:var(--ok);">Restore</button><button name="action" value="hard_delete" class="btn btn--ghost btn--sm" style="color:var(--danger);" onclick="return confirm('Permanently delete?');">Delete Forever</button></form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if microbes %}
+<div class="card mb-md">
+    <div class="card__header"><div class="card__title">Deleted Microorganisms ({{ microbes|length }})</div></div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Name</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for m in microbes %}
+            <tr>
+                <td><code>{{ m.code }}</code></td>
+                <td>{{ m.name }}</td>
+                <td>
+                    <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="type" value="microorganism"><input type="hidden" name="id" value="{{ m.pk }}"><button name="action" value="restore" class="btn btn--ghost btn--sm" style="color:var(--ok);">Restore</button><button name="action" value="hard_delete" class="btn btn--ghost btn--sm" style="color:var(--danger);" onclick="return confirm('Permanently delete?');">Delete Forever</button></form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

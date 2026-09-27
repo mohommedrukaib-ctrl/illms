@@ -1,0 +1,42 @@
+{% load ilims_tags %}
+{% if tests %}
+{% for t in tests %}
+<tr>
+    <td><a href="{% url 'core:test_detail' t.pk %}" class="text-brand text-bold"><code class="text-mono">{{ t.code }}</code></a></td>
+    <td>{{ t.sample.code }}</td>
+    <td>{{ t.test_type.name|default:"—" }}</td>
+    <td>{{ t.target.name|default:"—" }}</td>
+    <td>{{ t.run_date|date:"Y-m-d" }}</td>
+    <td>
+        {% with d=t.detection_summary %}
+        <span class="pill pill--{% if d == 'Detected' %}danger{% elif d == 'Not detected' %}ok{% else %}warn{% endif %}">{{ d }}</span>
+        {% endwith %}
+    </td>
+    <td class="text-right">
+        <div class="d-flex gap-xs justify-end">
+            <a href="{% url 'core:test_detail' t.pk %}" class="btn btn--ghost btn--sm" title="View">
+                {% icon "search" "16" %}
+            </a>
+                            <a href="{% url 'core:test_create' %}?edit={{ t.pk }}"
+                   class="btn btn--ghost btn--sm"
+                   hx-get="{% url 'core:test_create' %}?modal=1&edit={{ t.pk }}"
+                   hx-target="#modal-host" hx-swap="innerHTML" title="Edit">
+                    {% icon "settings" "16" %}
+                </a>
+            <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                  onsubmit="return confirm('Move test {{ t.code }} to Recycle Bin?');">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="molecular_test">
+                <input type="hidden" name="id" value="{{ t.pk }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete">
+                    {% icon "close" "16" %}
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="7" class="text-center p-lg text-muted">No molecular tests yet.</td></tr>
+{% endif %}

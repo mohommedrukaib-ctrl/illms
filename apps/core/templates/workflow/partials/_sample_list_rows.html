@@ -1,0 +1,76 @@
+{% load ilims_tags %}
+
+{% if samples %}
+    {% for s in samples %}
+    <tr>
+        {# 1. SAMPLE ID #}
+        <td>
+            <a href="{% url 'core:sample_detail' s.pk %}" class="font-mono text-primary font-semibold">
+                {{ s.code }}
+            </a>
+        </td>
+
+        {# 2. CLIENT #}
+        <td>{{ s.client.name|default:"—" }}</td>
+
+        {# 3. PRODUCT #}
+        <td>{{ s.product_name|default:"—" }}</td>
+
+        {# 4. TYPE #}
+        <td>{{ s.product_type.name|default:s.product_category.name|default:"—" }}</td>
+
+        {# 5. RECEIVED #}
+        <td class="whitespace-nowrap">{{ s.received_date|date:"Y-m-d"|default:"—" }}</td>
+
+        {# 6. STATUS #}
+        <td>
+            <span class="pill pill--{% if s.workflow_state == 'COMPLETED' or s.workflow_state == 'REPORT_READY' %}ok{% elif s.workflow_state == 'CANCELLED' %}danger{% else %}info{% endif %}">
+                {{ s.get_workflow_state_display }}
+            </span>
+        </td>
+
+        {# 7. SINGLE ACTION COLUMN #}
+        <td class="text-right whitespace-nowrap">
+            <div class="d-flex gap-xs justify-end items-center">
+                <!-- View / Detail -->
+                <a href="{% url 'core:sample_detail' s.pk %}" 
+                   class="btn btn--ghost btn--sm" 
+                   title="View Details">
+                    {% icon "search" "16" %}
+                </a>
+
+                <!-- Edit Sample Modal -->
+                <a href="{% url 'core:sample_create' %}?edit={{ s.pk }}"
+                   class="btn btn--ghost btn--sm"
+                   hx-get="{% url 'core:sample_create' %}?modal=1&edit={{ s.pk }}"
+                   hx-target="#modal-host" 
+                   hx-swap="innerHTML"
+                   title="Edit Sample">
+                    {% icon "settings" "16" %}
+                </a>
+
+                <!-- Soft Delete -->
+                <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                      onsubmit="return confirm('Move sample {{ s.code }} to Recycle Bin?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="model" value="sample">
+                    <input type="hidden" name="id" value="{{ s.pk }}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete Sample">
+                        {% icon "close" "16" %}
+                    </button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="7" class="text-center p-lg text-muted">No samples match your filters.</td>
+    </tr>
+{% endif %}
+
+{# Keep HTMX pagination synced on filter #}
+<div id="pagination-wrapper" hx-swap-oob="true">
+    {% include "partials/_pagination.html" %}
+</div>

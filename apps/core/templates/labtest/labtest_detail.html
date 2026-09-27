@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Workbench: {{ sample.code }} — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "flask" "24" %}</div>
+        <div class="page-header__text">
+            <h1>Laboratory Workbench: <code class="text-mono">{{ sample.code }}</code></h1>
+            <p>{{ sample.product_name }} · Client: {{ sample.client.name }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:labtest_list' %}" class="btn btn--secondary">← Back to Workbench Queue</a>
+    </div>
+</div>
+
+<div class="layout-two-col mb-lg">
+    <!-- Specimen Information Card -->
+    <div class="card">
+        <div class="card__header"><div class="card__title">Specimen Metadata</div></div>
+        <div class="card__body">
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Product / Specimen</div>
+                    <div class="text-semibold">{{ sample.product_name }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Primary Requested Test</div>
+                    <div class="text-semibold">
+                        <span class="pill pill--brand">
+                            {{ sample.requested_test.name|default:"GENERAL TESTING" }}
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Received Date</div>
+                    <div class="text-semibold">{{ sample.received_date|date:"d M Y" }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Target Due Date</div>
+                    <div class="text-semibold">{{ sample.due_date|date:"d M Y"|default:"—" }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Category / Product Type</div>
+                    <div class="text-semibold">{{ sample.product_category.name|default:"—" }} / {{ sample.product_type.name|default:"—" }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Priority</div>
+                    <div class="text-semibold">{{ sample.get_priority_display }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Storage Condition</div>
+                    <div class="text-semibold">{{ sample.get_storage_condition_display }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted text-uppercase">Facility</div>
+                    <div class="text-semibold">{{ sample.laboratory.name|default:"—" }}</div>
+                </div>
+            </div>
+            {% if sample.remarks %}
+            <div class="mt-md p-sm border rounded bg-card-hover">
+                <div class="text-xs text-muted text-uppercase mb-xs">Intake Remarks</div>
+                <div class="text-sm">{{ sample.remarks }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Status Card -->
+    <div>
+        {% include "workflow/partials/_status_card.html" %}
+    </div>
+</div>
+
+<!-- Attached Multiple Tests Management Section -->
+{% include "workflow/partials/_sample_tests_section.html" %}
+
+{% endblock %}

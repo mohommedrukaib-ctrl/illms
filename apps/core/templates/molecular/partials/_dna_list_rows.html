@@ -1,0 +1,38 @@
+{% load ilims_tags %}
+{% if extractions %}
+{% for e in extractions %}
+<tr>
+    <td><a href="{% url 'core:dna_detail' e.pk %}" class="text-brand text-bold"><code class="text-mono">{{ e.code }}</code></a></td>
+    <td>{{ e.sample.code }}<br><span class="text-xs text-muted">{{ e.sample.client.name }}</span></td>
+    <td>{{ e.method.name|default:"—" }}</td>
+    <td>{{ e.extraction_date|date:"Y-m-d" }}</td>
+    <td>{{ e.operator.get_short_name|default:"—" }}</td>
+    <td><span class="pill pill--ok">Completed</span></td>
+    <td class="text-right">
+        <div class="d-flex gap-xs justify-end">
+            <a href="{% url 'core:dna_detail' e.pk %}" class="btn btn--ghost btn--sm" title="View">
+                {% icon "search" "16" %}
+            </a>
+                            <a href="{% url 'core:dna_create' %}?edit={{ e.pk }}"
+                   class="btn btn--ghost btn--sm"
+                   hx-get="{% url 'core:dna_create' %}?modal=1&edit={{ e.pk }}"
+                   hx-target="#modal-host" hx-swap="innerHTML" title="Edit">
+                    {% icon "settings" "16" %}
+                </a>
+            <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                  onsubmit="return confirm('Move extraction {{ e.code }} to Recycle Bin?');">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="dna_extraction">
+                <input type="hidden" name="id" value="{{ e.pk }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete">
+                    {% icon "close" "16" %}
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="7" class="text-center p-lg text-muted">No DNA extractions yet.</td></tr>
+{% endif %}

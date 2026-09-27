@@ -1,0 +1,229 @@
+/* ═══════════════════════════════════════════════════════════════
+   ILIMS Form Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+.form-group {
+    margin-bottom: var(--space-md);
+}
+
+.form-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.form-label--required::after {
+    content: " *";
+    color: var(--danger);
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: var(--font-sans);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    line-height: 1.5;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    border-color: var(--brand);
+    box-shadow: var(--focus-ring);
+    outline: none;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.form-input--error {
+    border-color: var(--danger);
+}
+
+.form-input--error:focus {
+    box-shadow: var(--focus-ring-danger);
+}
+
+.form-input--code {
+    text-align: center;
+    font-size: var(--font-size-2xl);
+    letter-spacing: 0.5em;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    max-width: 240px;
+}
+
+.form-hint {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: var(--space-xs);
+}
+
+.form-error {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+    margin-top: var(--space-xs);
+}
+
+.form-error ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* ─── Buttons ─── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: 10px 20px;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    text-decoration: none;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.btn--primary {
+    background: var(--brand);
+    color: white;
+    border-color: var(--brand);
+}
+
+.btn--primary:hover {
+    background: var(--brand-deep);
+    border-color: var(--brand-deep);
+}
+
+.btn--secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn--secondary:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color-strong);
+}
+
+.btn--danger {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+.btn--danger:hover {
+    background: #c74444;
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border-color: transparent;
+    padding: 6px 12px;
+}
+
+.btn--ghost:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.btn--sm {
+    padding: 6px 14px;
+    font-size: var(--font-size-xs);
+}
+
+.btn--lg {
+    padding: 12px 28px;
+    font-size: var(--font-size-lg);
+}
+
+.btn--block {
+    width: 100%;
+}
+
+.btn--icon {
+    padding: 8px;
+    min-width: 36px;
+}
+
+/* ─── Login form specific ─── */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bg-body);
+    padding: var(--space-md);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-2xl);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.login-logo {
+    width: 56px;
+    height: 56px;
+    background: var(--brand);
+    border-radius: var(--border-radius-lg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    margin-bottom: var(--space-md);
+}
+
+.login-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.login-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}

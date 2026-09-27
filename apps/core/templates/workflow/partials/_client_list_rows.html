@@ -1,0 +1,41 @@
+{% load ilims_tags %}
+{% if clients %}
+    {% for c in clients %}
+    <tr>
+        <td><code class="text-mono">{{ c.code }}</code></td>
+        <td><strong>{{ c.name }}</strong></td>
+        <td>
+            {{ c.contact_person|default:"—" }}<br>
+            <span class="text-xs text-muted">{{ c.email }}</span>
+        </td>
+        <td>{{ c.phone|default:"—" }}</td>
+        <td>{{ c.region.name|default:"—" }}, {{ c.country.iso2 }}</td>
+        <td><span class="pill pill--ok">Active</span></td>
+        <td class="text-right">
+            <div class="d-flex gap-xs justify-end">
+                <a href="{% url 'core:client_create' %}?edit={{ c.pk }}"
+                   class="btn btn--ghost btn--sm"
+                   hx-get="{% url 'core:client_create' %}?modal=1&edit={{ c.pk }}"
+                   hx-target="#modal-host" hx-swap="innerHTML"
+                   title="Edit">
+                    {% icon "settings" "16" %}
+                </a>
+                <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                      onsubmit="return confirm('Move client {{ c.name }} to Recycle Bin?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="model" value="client">
+                    <input type="hidden" name="id" value="{{ c.pk }}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete">
+                        {% icon "close" "16" %}
+                    </button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="7" class="text-center p-lg text-muted">No clients found.</td>
+    </tr>
+{% endif %}

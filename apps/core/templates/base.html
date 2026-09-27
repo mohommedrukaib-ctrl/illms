@@ -1,0 +1,69 @@
+{% load static ilims_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{% theme_class current_theme %}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}{% if page_title %}{{ page_title }} — {% endif %}{{ ILIMS_TITLE }}{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+
+    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/topbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cards.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modals.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/utilities.css' %}">
+    <link rel="stylesheet" href="{% static 'css/smart_select.css' %}">
+    {% block extra_css %}{% endblock %}
+
+    <script src="{% static 'js/htmx.min.js' %}" defer></script>
+    <script src="{% static 'js/ilims.js' %}" defer></script>
+    {% block extra_js_head %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <noscript>
+        {% include "partials/_noscript.html" %}
+    </noscript>
+
+    {% if user.is_authenticated %}
+        {% include "partials/_sidebar.html" %}
+        <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+        <div class="app-main">
+            {% include "partials/_topbar.html" %}
+
+            <noscript>
+                {% include "partials/_messages.html" with noscript=True %}
+            </noscript>
+            {% include "partials/_messages.html" %}
+
+            <main id="main-content" class="app-content" role="main">
+                {% block content %}{% endblock %}
+            </main>
+
+            {% include "partials/_footer.html" %}
+        </div>
+
+        {# HTMX modal host #}
+        <div id="modal-host" aria-live="polite"></div>
+    {% else %}
+        <main id="main-content" role="main">
+            <noscript>
+                {% include "partials/_messages.html" with noscript=True %}
+            </noscript>
+            {% include "partials/_messages.html" %}
+            {% block auth_content %}{% endblock %}
+        </main>
+    {% endif %}
+
+    {% csrf_token %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

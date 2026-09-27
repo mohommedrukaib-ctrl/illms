@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+{% block content %}
+<div class="page-header"><div class="page-header__left"><div class="page-header__icon">{% icon "microbe" "24" %}</div>
+<div class="page-header__text"><h1>{{ modal_title }}</h1></div></div>
+<a href="{% url 'core:microbe_list' %}" class="btn btn--secondary">← Back</a></div>
+<div class="card max-w-lg"><div class="card__body">
+<form method="post">{% csrf_token %}
+{% if form.errors %}<div class="message message--error mb-md">{{ form.errors }}</div>{% endif %}
+<div class="form-group"><label class="form-label form-label--required">Name</label>{{ form.name }}</div>
+<div class="form-group"><label class="form-label form-label--required">Code</label>{{ form.code }}</div>
+<div class="form-group"><label class="form-label">Scientific name</label>{{ form.scientific_name }}</div>
+<div class="form-group"><label class="form-label">Category</label>{{ form.category }}</div>
+<div class="form-group"><label class="form-label">Risk</label>{{ form.risk_level }}</div>
+<div class="form-group"><label class="form-label">Description</label>{{ form.description }}</div>
+<button class="btn btn--primary" type="submit">Save</button>
+</form></div></div>
+{% endblock %}

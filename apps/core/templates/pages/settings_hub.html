@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Settings Hub — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">
+            {% icon "settings" "24" %}
+        </div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="/">Home</a></li>
+                <li><span class="breadcrumb__current">Settings Hub</span></li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="?tab=general" class="tab {% if active_tab == 'general' %}active{% endif %}">General & Numbers</a>
+    <a href="?tab=features" class="tab {% if active_tab == 'features' %}active{% endif %}">Feature Flags</a>
+    <a href="?tab=countries" class="tab {% if active_tab == 'countries' %}active{% endif %}">Countries</a>
+    <a href="?tab=regions" class="tab {% if active_tab == 'regions' %}active{% endif %}">Regions</a>
+    <a href="?tab=labs" class="tab {% if active_tab == 'labs' %}active{% endif %}">Laboratories</a>
+</div>
+
+{% if active_tab == 'general' %}
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Global Organization & Identification Parameters</div>
+        </div>
+        <div class="card__body">
+            <form method="post" action="?tab=general" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save_settings">
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Organization Legal Name</label>
+                    {{ settings_form.organization_name }}
+                </div>
+
+                <div class="divider"></div>
+                <h3 class="text-sm text-uppercase text-muted mb-md">Unique Identifier Generation Patterns</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Client / Customer Code Prefix</label>
+                    {{ settings_form.client_prefix }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sample Code Prefix</label>
+                    {{ settings_form.sample_prefix }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Batch Code Prefix</label>
+                    {{ settings_form.batch_prefix }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Analysis Report Prefix</label>
+                    {{ settings_form.report_prefix }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Divider Segment Separator</label>
+                    {{ settings_form.separator }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Counter Zero Padding Length</label>
+                    {{ settings_form.padding }}
+                </div>
+
+                <div class="form-group d-flex items-center gap-sm mt-md">
+                    {{ settings_form.reset_yearly }}
+                    <label class="form-label m-0" for="id_reset_yearly">Reset numbering sequences every calendar year</label>
+                </div>
+
+                <div class="divider"></div>
+                <h3 class="text-sm text-uppercase text-muted mb-md">SLA & Analytical Timelines</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Standard Turnaround Time (TAT) in Days</label>
+                    {{ settings_form.tat_normal_days }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Urgent Turnaround Time (TAT) in Days</label>
+                    {{ settings_form.tat_urgent_days }}
+                </div>
+                <div class="form-group d-flex items-center gap-sm mt-md">
+                    {{ settings_form.working_days_only }}
+                    <label class="form-label m-0" for="id_working_days_only">Calculate SLAs using working days only (exclude weekends)</label>
+                </div>
+
+                <div class="d-flex justify-end gap-sm mt-lg">
+                    <button type="submit" class="btn btn--primary">
+                        {% icon "check" "18" %} Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card__header">
+                <div class="card__title">Realtime Numbering Previews</div>
+            </div>
+            <div class="card__body">
+                <p class="text-xs text-muted mb-md">Previews are computed dynamically using current prefixes, your default seeded Country (LK) & Region (WP), and sequence counts.</p>
+                
+                <div class="mb-sm border p-sm rounded bg-card">
+                    <span class="text-xs text-uppercase text-muted d-block">Client Format</span>
+                    <strong class="text-mono text-brand">{{ code_previews.client }}</strong>
+                </div>
+
+                <div class="mb-sm border p-sm rounded bg-card">
+                    <span class="text-xs text-uppercase text-muted d-block">Sample ID Format</span>
+                    <strong class="text-mono text-brand">{{ code_previews.sample }}</strong>
+                </div>
+
+                <div class="mb-sm border p-sm rounded bg-card">
+                    <span class="text-xs text-uppercase text-muted d-block">Batch ID Format</span>
+                    <strong class="text-mono text-brand">{{ code_previews.batch }}</strong>
+                </div>
+
+                <div class="mb-sm border p-sm rounded bg-card">
+                    <span class="text-xs text-uppercase text-muted d-block">Report Format</span>
+                    <strong class="text-mono text-brand">{{ code_previews.report }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'features' %}
+<div class="card">
+    <div class="card__header">
+        <div class="card__title">Dynamic Application Feature Flags</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Feature Module Key</th>
+                    <th>Functional Component</th>
+                    <th>Group</th>
+                    <th>Scope Description</th>
+                    <th>Operational Status</th>
+                    <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flag in feature_flags %}
+                <tr>
+                    <td><code class="text-mono">{{ flag.key }}</code></td>
+                    <td><strong>{{ flag.label }}</strong></td>
+                    <td><span class="pill pill--info">{{ flag.group }}</span></td>
+                    <td class="text-muted">{{ flag.description }}</td>
+                    <td>
+                        {% if flag.enabled %}
+                            <span class="pill pill--ok">ACTIVE</span>
+                        {% else %}
+                            <span class="pill pill--danger">LOCKED</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        {% if flag.is_core %}
+                            <span class="text-xs text-muted text-uppercase">PROTECTED</span>
+                        {% else %}
+                            <form method="post" action="?tab=features" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="toggle_flag">
+                                <input type="hidden" name="flag_key" value="{{ flag.key }}">
+                                <button type="submit" class="btn btn--secondary btn--sm">
+                                    {% if flag.enabled %}Disable{% else %}Enable{% endif %}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'countries' %}
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Supported Countries Reference List</div>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Country Name</th>
+                        <th>ISO2</th>
+                        <th>ISO3</th>
+                        <th>Dial Code</th>
+                        <th>Currency</th>
+                        <th>Timezone</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in countries %}
+                    <tr>
+                        <td><strong>{{ c.name }}</strong></td>
+                        <td><code class="text-mono">{{ c.iso2 }}</code></td>
+                        <td><code class="text-mono">{{ c.iso3 }}</code></td>
+                        <td>{{ c.dial_code }}</td>
+                        <td>{{ c.currency }}</td>
+                        <td>{{ c.timezone }}</td>
+                        <td>
+                            {% if c.is_active %}<span class="pill pill--ok">Active</span>{% else %}<span class="pill pill--danger">Disabled</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Add New Country</div>
+        </div>
+        <div class="card__body">
+            <form method="post" action="?tab=countries">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_country">
+                
+                <div class="form-group">
+                    <label class="form-label form-label--required">Country Name</label>
+                    {{ country_form.name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">ISO alpha-2</label>
+                    {{ country_form.iso2 }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">ISO alpha-3</label>
+                    {{ country_form.iso3 }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">International Dial Code</label>
+                    {{ country_form.dial_code }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Currency Code</label>
+                    {{ country_form.currency }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Primary Timezone</label>
+                    {{ country_form.timezone }}
+                </div>
+                <div class="form-group d-flex items-center gap-sm">
+                    {{ country_form.is_active }}
+                    <label class="form-label m-0" for="id_is_active">Country is active</label>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--block mt-md">Add Country</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'regions' %}
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Administrative Regions / Provinces</div>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Region Name</th>
+                        <th>Region Code</th>
+                        <th>Country</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in regions %}
+                    <tr>
+                        <td><strong>{{ r.name }}</strong></td>
+                        <td><code class="text-mono">{{ r.code }}</code></td>
+                        <td>{{ r.country.name }}</td>
+                        <td>
+                            {% if r.is_active %}<span class="pill pill--ok">Active</span>{% else %}<span class="pill pill--danger">Disabled</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Add New Administrative Region</div>
+        </div>
+        <div class="card__body">
+            <form method="post" action="?tab=regions">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_region">
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Parent Country</label>
+                    {{ region_form.country }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Region Code</label>
+                    {{ region_form.code }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Region Name</label>
+                    {{ region_form.name }}
+                </div>
+                <div class="form-group d-flex items-center gap-sm">
+                    {{ region_form.is_active }}
+                    <label class="form-label m-0" for="id_is_active">Region is active</label>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--block mt-md">Add Region</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'labs' %}
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Registered Laboratories</div>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Facility Code</th>
+                        <th>Laboratory Name</th>
+                        <th>Geographical Location</th>
+                        <th>Email Contact</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lab in laboratories %}
+                    <tr>
+                        <td><code class="text-mono">{{ lab.code }}</code></td>
+                        <td><strong>{{ lab.name }}</strong></td>
+                        <td>{{ lab.region.name|default:"" }}, {{ lab.country.name }}</td>
+                        <td>{{ lab.email }}</td>
+                        <td>
+                            {% if lab.is_active %}<span class="pill pill--ok">Active</span>{% else %}<span class="pill pill--danger">Disabled</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Register New Laboratory Facility</div>
+        </div>
+        <div class="card__body">
+            <form method="post" action="?tab=labs">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_laboratory">
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Laboratory Code</label>
+                    {{ laboratory_form.code }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Facility Name</label>
+                    {{ laboratory_form.name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Country</label>
+                    {{ laboratory_form.country }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Region / State</label>
+                    {{ laboratory_form.region }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Physical Street Address</label>
+                    {{ laboratory_form.address }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Line</label>
+                    {{ laboratory_form.phone }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Official Contact Email</label>
+                    {{ laboratory_form.email }}
+                </div>
+                <div class="form-group d-flex items-center gap-sm">
+                    {{ laboratory_form.is_active }}
+                    <label class="form-label m-0" for="id_is_active">Facility is active</label>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--block mt-md">Register Laboratory</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

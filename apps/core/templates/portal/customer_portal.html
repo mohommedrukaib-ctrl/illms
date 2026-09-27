@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Track Your Sample — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card" style="max-width: 520px;">
+        <div class="login-header">
+            <div class="login-logo">IL</div>
+            <h1 class="login-title">{{ ILIMS_TITLE }}</h1>
+            <p class="login-subtitle">{{ ILIMS_SUBTITLE }} — Customer Sample Tracking</p>
+        </div>
+
+        {% if error %}
+        <div class="message message--error mb-md" role="alert">
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'core:customer_portal' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label form-label--required">Tracking ID</label>
+                <input type="text" name="tracking_code" class="form-input"
+                       placeholder="e.g. ILIMS-A3F7C2E9-1B4D8F6A"
+                       value="{{ tracking_code|default:'' }}"
+                       autocomplete="off" required autofocus
+                       style="font-family: var(--font-mono); text-transform: uppercase;">
+                <div class="form-hint">Found on your sample receipt or email notification.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label form-label--required">Registered Phone Number</label>
+                <input type="tel" name="phone" class="form-input"
+                       placeholder="e.g. +94 77 123 4567"
+                       value="{{ phone|default:'' }}"
+                       autocomplete="tel" required>
+                <div class="form-hint">The phone number you provided when submitting the sample.</div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md">
+                {% icon "search" "18" %} Track My Sample
+            </button>
+        </form>
+
+        <div class="mt-lg text-center">
+            <p class="text-xs text-muted">
+                Your data is secure. Tracking requires both your unique ID and registered phone number.
+            </p>
+            <a href="{% url 'core:dashboard' %}" class="text-xs text-brand mt-sm d-inline-block">
+                ← Lab Staff Login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

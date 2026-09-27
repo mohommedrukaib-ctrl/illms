@@ -1,0 +1,81 @@
+{% load ilims_tags %}
+<div id="status-card">
+    <div class="card mb-md">
+        <div class="card__header"><div class="card__title">Current Status</div></div>
+        <div class="card__body text-center p-lg">
+            <span class="pill pill--{{ sample.state_color }} text-lg p-sm" style="font-weight:700;">
+                {{ sample.get_workflow_state_display }}
+            </span>
+            
+            <div class="mt-xl">
+                <!-- Fast-Path 1-Click Advance Buttons -->
+                {% if sample.workflow_state == 'RECEIVED' %}
+                    <form method="post" action="{% url 'core:sample_advance' sample.pk %}"
+                          hx-post="{% url 'core:sample_advance' sample.pk %}"
+                          hx-target="#status-card" hx-swap="outerHTML">
+                        {% csrf_token %}
+                        <input type="hidden" name="to_state" value="TESTING">
+                        <input type="hidden" name="notes" value="Started testing (1-Click)">
+                        <button type="submit" class="btn btn--brand btn--block mb-sm">
+                            {% icon "flask" "16" %} Start Testing Now
+                        </button>
+                    </form>
+
+                {% elif sample.workflow_state == 'TESTING' %}
+                    <form method="post" action="{% url 'core:sample_advance' sample.pk %}"
+                          hx-post="{% url 'core:sample_advance' sample.pk %}"
+                          hx-target="#status-card" hx-swap="outerHTML">
+                        {% csrf_token %}
+                        <input type="hidden" name="to_state" value="ANALYSIS">
+                        <input type="hidden" name="notes" value="Moved to Analysis (1-Click)">
+                        <button type="submit" class="btn btn--ok btn--block mb-sm">
+                            {% icon "check" "16" %} Mark Tests Complete
+                        </button>
+                    </form>
+
+                {% elif sample.workflow_state == 'ANALYSIS' %}
+                    <form method="post" action="{% url 'core:sample_advance' sample.pk %}"
+                          hx-post="{% url 'core:sample_advance' sample.pk %}"
+                          hx-target="#status-card" hx-swap="outerHTML">
+                        {% csrf_token %}
+                        <input type="hidden" name="to_state" value="REPORT_PREP">
+                        <input type="hidden" name="notes" value="Sent to QC (1-Click)">
+                        <button type="submit" class="btn btn--info btn--block mb-sm">
+                            {% icon "qc" "16" %} Send to QC Verification
+                        </button>
+                    </form>
+                {% endif %}
+
+                <!-- Standard Modal Update Status (For Manual Jumps/Rejections) -->
+                <a href="{% url 'core:sample_advance' sample.pk %}"
+                   class="btn btn--secondary btn--block"
+                   hx-get="{% url 'core:sample_advance' sample.pk %}?modal=1"
+                   hx-target="#modal-host" hx-swap="innerHTML">
+                    Update Status Manually
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Show the QC rejection/rework notes here if applicable -->
+    {% with latest_qc=sample.qc_records.first %}
+    {% if latest_qc %}
+    <div class="card mb-md border-{% if latest_qc.decision == 'REJECTED' %}danger{% elif latest_qc.decision == 'REWORK' %}info{% else %}ok{% endif %}">
+        <div class="card__body p-sm">
+            <div class="text-xs text-uppercase text-muted mb-xs">Latest QC Review</div>
+            <div class="d-flex items-center gap-sm mb-xs">
+                <span class="pill pill--{{ latest_qc.decision_color }}">{{ latest_qc.get_decision_display }}</span>
+                {% if latest_qc.decision == 'APPROVED' %}
+                    <span class="pill pill--{{ latest_qc.safety_color }}">{{ latest_qc.get_safety_class_display }}</span>
+                {% endif %}
+            </div>
+            {% if latest_qc.review_notes %}
+                <div class="text-xs mt-sm text-secondary">
+                    <strong>Notes:</strong> {{ latest_qc.review_notes }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>

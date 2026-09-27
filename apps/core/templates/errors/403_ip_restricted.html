@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Access Restricted (403) — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block auth_content %}
+<div class="login-container">
+    <div class="login-card text-center" style="max-width: 480px;">
+        <div class="stat-card__icon mx-auto mb-md" style="margin: 0 auto 16px auto; background: var(--danger-light); color: var(--danger); width: 64px; height: 64px; border-radius: 50%;">
+            {% icon "lock" "32" %}
+        </div>
+        <h1 class="text-2xl text-bold mb-xs" style="color: var(--danger);">403 — IP Access Restricted</h1>
+        <p class="text-secondary text-sm mb-md">
+            Your IP address is not authorized to access the Food Safety Molecular Analysis Portal.
+        </p>
+        <div class="p-sm bg-card-hover border rounded text-xs text-mono mb-lg">
+            Client IP: <strong>{{ client_ip }}</strong>
+        </div>
+        <p class="text-muted text-xs">
+            If you believe this is an error, contact your laboratory administrator to whitelist your static IP or VPN subnet.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card max-w-md mx-auto text-center" style="margin: 40px auto;">
+    <div class="card__body p-xl">
+        <div class="stat-card__icon mx-auto mb-md" style="margin: 0 auto 16px auto; background: var(--danger-light); color: var(--danger); width: 64px; height: 64px; border-radius: 50%;">
+            {% icon "lock" "32" %}
+        </div>
+        <h1 class="text-2xl text-bold mb-xs" style="color: var(--danger);">403 — IP Access Restricted</h1>
+        <p class="text-secondary text-sm mb-md">
+            Your network IP address is not included in the approved whitelist for this facility.
+        </p>
+        <div class="p-sm bg-card-hover border rounded text-xs text-mono mb-lg">
+            Client IP: <strong>{{ client_ip }}</strong>
+        </div>
+        <p class="text-muted text-xs">
+            Contact your ILIMS system administrator with the IP address above to request network access.
+        </p>
+    </div>
+</div>
+{% endblock %}

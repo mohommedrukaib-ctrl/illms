@@ -1,0 +1,53 @@
+{% load ilims_tags %}
+{% if reminders %}
+    {% for r in reminders %}
+    <tr>
+        <td><span class="pill pill--{{ r.kind_color }}">{{ r.get_kind_display }}</span></td>
+        <td><span class="pill pill--{{ r.priority_color }}">{{ r.get_priority_display }}</span></td>
+        <td><strong>{{ r.title }}</strong>
+            {% if r.message %}<div class="text-xs text-muted">{{ r.message|truncatechars:80 }}</div>{% endif %}
+        </td>
+        <td>
+            {% if r.sample %}
+                <a href="{% url 'core:sample_detail' r.sample_id %}" class="text-brand">
+                    <code class="text-mono">{{ r.sample.code }}</code>
+                </a>
+            {% else %}—{% endif %}
+        </td>
+        <td>
+            <span class="{% if r.due_date < today %}text-danger text-bold{% endif %}">
+                {{ r.due_date|date:"d M Y" }}
+            </span>
+        </td>
+        <td>{{ r.assigned_to.get_short_name|default:"—" }}</td>
+        <td class="text-right">
+            {% if not r.is_done %}
+            <div class="d-flex gap-xs justify-end">
+                <form method="post" action="{% url 'core:reminder_action' r.pk 'open' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm" title="Open">{% icon "search" "16" %}</button>
+                </form>
+                <form method="post" action="{% url 'core:reminder_action' r.pk 'done' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--ok);" title="Mark Done">{% icon "check" "16" %}</button>
+                </form>
+                <form method="post" action="{% url 'core:reminder_action' r.pk 'snooze_1d' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm" title="Snooze 1 day">1d</button>
+                </form>
+                <form method="post" action="{% url 'core:reminder_action' r.pk 'snooze_3d' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm" title="Snooze 3 days">3d</button>
+                </form>
+            </div>
+            {% else %}
+                <span class="pill pill--ok">Done</span>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="7" class="text-center p-lg text-muted">No reminders in this category.</td>
+    </tr>
+{% endif %}

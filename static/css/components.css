@@ -1,0 +1,193 @@
+/* ═══════════════════════════════════════════════════════════════
+   ILIMS Miscellaneous Components
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Toast / Messages ─── */
+.messages {
+    position: fixed;
+    top: calc(var(--topbar-height) + var(--space-md));
+    right: var(--space-lg);
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    max-width: 420px;
+    width: 100%;
+    pointer-events: none;
+}
+
+.message {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    font-size: var(--font-size-sm);
+    pointer-events: auto;
+    border-left: 4px solid;
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.message--success {
+    border-left-color: var(--ok);
+    background: var(--ok-light);
+}
+
+.message--error {
+    border-left-color: var(--danger);
+    background: var(--danger-light);
+}
+
+.message--warning {
+    border-left-color: var(--warn);
+    background: var(--warn-light);
+}
+
+.message--info {
+    border-left-color: var(--info);
+    background: var(--info-light);
+}
+
+/* Fallback for no-JS: messages as banners */
+.messages--noscript {
+    position: static;
+    max-width: 100%;
+    padding: 0 var(--space-lg);
+    margin-top: var(--space-sm);
+}
+
+/* ─── Empty state ─── */
+.empty-state {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-muted);
+}
+
+.empty-state__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--space-md);
+    color: var(--border-color-strong);
+}
+
+.empty-state__title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.empty-state__text {
+    font-size: var(--font-size-sm);
+    max-width: 400px;
+    margin: 0 auto var(--space-md);
+}
+
+/* ─── Loading spinner (CSS only) ─── */
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ─── Footer ─── */
+.app-footer {
+    padding: var(--space-md) var(--space-lg);
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+}
+
+/* ─── Two-column layout ─── */
+.layout-two-col {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: var(--space-lg);
+}
+
+@media (max-width: 1200px) {
+    .layout-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ─── Divider ─── */
+.divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--space-md) 0;
+    border: none;
+}
+
+/* ─── Tabs (for sample detail) ─── */
+.tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: var(--space-lg);
+    overflow-x: auto;
+}
+
+.tab {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.tab:hover {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.tab.active {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+}
+
+/* ─── Filters bar ─── */
+.filters-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.filters-bar .form-input {
+    max-width: 240px;
+}
+
+/* ─── QR Code display ─── */
+.qr-display {
+    text-align: center;
+    padding: var(--space-md);
+    background: white;
+    border-radius: var(--border-radius);
+    display: inline-block;
+}
+
+.qr-display svg {
+    max-width: 200px;
+    height: auto;
+}

@@ -1,0 +1,20 @@
+{% load ilims_tags %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sample ID</th>
+                <th>Client</th>
+                <th>Product</th>
+                <th>Type</th>
+                <th>Received</th>
+                <th>Status</th>
+                <th class="text-right">Action</th>
+            </tr>
+        </thead>
+        <tbody id="sample-tbody">
+            {% include "workflow/partials/_sample_list_rows.html" %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" %}
+</div>

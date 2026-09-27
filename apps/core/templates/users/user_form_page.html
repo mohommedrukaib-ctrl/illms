@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}{{ modal_title }} — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "users" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ modal_title }}</h1>
+            <p>Manage user credentials, role permissions, and laboratory assignment</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:users_list' %}" class="btn btn--secondary">← Back to Users</a>
+    </div>
+</div>
+
+<div class="card max-w-lg">
+    <div class="card__body">
+        <form method="post" action="{% url 'core:user_create' %}" novalidate>
+            {% csrf_token %}
+            {% if edit_pk %}<input type="hidden" name="edit" value="{{ edit_pk }}">{% endif %}
+
+            {% if form.errors %}
+            <div class="message message--error mb-md" role="alert">
+                <strong>Please correct the following errors:</strong>
+                <ul style="margin:6px 0 0 1.1rem; padding:0;">
+                    {% for field, errs in form.errors.items %}
+                        {% for e in errs %}
+                            <li><strong>{% if field != '__all__' %}{{ field|title }}:{% endif %}</strong> {{ e }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div class="form-group">
+                    <label class="form-label form-label--required">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div class="form-group">
+                    <label class="form-label form-label--required">Username</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label--required">Email</label>
+                    {{ form.email }}
+                </div>
+            </div>
+
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div class="form-group">
+                    <label class="form-label form-label--required">Role</label>
+                    {{ form.role }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Laboratory</label>
+                    {{ form.laboratory }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label {% if not edit_pk %}form-label--required{% endif %}">
+                    Password {% if edit_pk %}(leave blank to keep current){% endif %}
+                </label>
+                {{ form.password }}
+                <div class="form-hint">{{ form.password.help_text }}</div>
+            </div>
+
+            {% if edit_pk %}
+            <div class="form-group d-flex items-center gap-sm mt-md">
+                {{ form.is_active }}
+                <label class="form-label m-0" for="id_is_active">Account is active</label>
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-end gap-sm mt-lg">
+                <a href="{% url 'core:users_list' %}" class="btn btn--secondary">Cancel</a>
+                <button type="submit" class="btn btn--primary">
+                    {% icon "check" "18" %} {% if edit_pk %}Save Changes{% else %}Create User{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

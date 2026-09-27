@@ -1,0 +1,31 @@
+{% load ilims_tags %}
+{% if logs %}
+    {% for log in logs %}
+    <tr>
+        <td class="text-muted text-xs">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+        <td>
+            <span class="pill pill--{% if log.action == 'CREATE' %}ok{% elif log.action == 'APPROVE' %}brand{% elif log.action == 'DELETE' %}danger{% else %}info{% endif %}">
+                {{ log.action }}
+            </span>
+        </td>
+        <td><strong>{{ log.user.username|default:"SYSTEM" }}</strong></td>
+        <td><code class="text-mono text-xs">{{ log.model_name }}</code></td>
+        <td class="text-mono text-xs">{{ log.record_id|truncatechars:18 }}</td>
+        <td>
+            <code class="text-mono text-xs text-muted" title="{{ log.hash }}">
+                {{ log.hash|slice:":12" }}…
+            </code>
+        </td>
+        <td class="text-right">
+            <a href="{% url 'core:audit_detail' log.pk %}"
+               class="btn btn--ghost btn--sm"
+               hx-get="{% url 'core:audit_detail' log.pk %}?modal=1"
+               hx-target="#modal-host" hx-swap="innerHTML">
+                {% icon "search" "14" %} Inspect
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr><td colspan="7" class="text-center p-lg text-muted">No audit records found.</td></tr>
+{% endif %}

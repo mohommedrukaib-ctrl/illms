@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}SmartSelect Demo — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "search" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="{% url 'core:dashboard' %}">Home</a></li>
+                <li><span class="breadcrumb__current">SmartSelect Demo</span></li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Try SmartSelect fields</div>
+            <div class="card__subtitle">Type a letter → live results (JS on). Type full name → server resolves (JS off).</div>
+        </div>
+        <div class="card__body">
+            <form method="post" action="" novalidate>
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Country</label>
+                    {% include "widgets/smart_select.html" with widget=country_widget %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Region</label>
+                    {% include "widgets/smart_select.html" with widget=region_widget %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label form-label--required">Laboratory</label>
+                    {% include "widgets/smart_select.html" with widget=laboratory_widget %}
+                </div>
+
+                <div class="d-flex justify-end gap-sm mt-lg">
+                    <button type="submit" class="btn btn--primary">
+                        {% icon "check" "18" %} Submit &amp; Resolve
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card__header">
+                <div class="card__title">Resolution Results</div>
+            </div>
+            <div class="card__body">
+                {% if submitted %}
+                    {% for kind_key, r in submitted.items %}
+                    <div class="border rounded p-sm mb-sm">
+                        <div class="text-xs text-uppercase text-muted">{{ kind_key }}</div>
+                        <div class="text-semibold">{{ r.display|default:"—" }}</div>
+                        <div class="text-xs text-muted">Code: <code>{{ r.code|default:"—" }}</code></div>
+                        <div class="text-xs text-muted">PK: <code>{{ r.pk|default:"—" }}</code></div>
+                        <div class="mt-xs">
+                            {% if r.status == "resolved" %}
+                                <span class="pill pill--ok">RESOLVED</span>
+                            {% elif r.status == "ambiguous" %}
+                                <span class="pill pill--warn">AMBIGUOUS</span>
+                            {% elif r.status == "not_found" %}
+                                <span class="pill pill--danger">NOT FOUND</span>
+                            {% else %}
+                                <span class="pill pill--info">EMPTY</span>
+                            {% endif %}
+                        </div>
+                        {% if r.message %}
+                        <div class="text-xs mt-xs">{{ r.message }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state__title">No submission yet</div>
+                        <div class="empty-state__text">Fill the form and submit to see how SmartSelect resolves values on the server.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-md">
+            <div class="card__header">
+                <div class="card__title">How to test JS-off</div>
+            </div>
+            <div class="card__body text-sm">
+                <ol style="padding-left: 1.2rem;">
+                    <li>Disable JavaScript in browser DevTools.</li>
+                    <li>Type "Sri Lanka" in the Country field — <strong>datalist</strong> shows native suggestions.</li>
+                    <li>Click <em>Browse list →</em> to open the picker page.</li>
+                    <li>Click <em>Select</em> next to a row — returns here with fields prefilled.</li>
+                    <li>Submit the form — server resolves typed text.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

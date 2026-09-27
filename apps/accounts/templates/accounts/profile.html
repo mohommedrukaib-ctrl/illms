@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Profile — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "client" "24" %}</div>
+        <div class="page-header__text">
+            <h1>Profile</h1>
+            <p>Manage your account settings</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="{% url 'core:dashboard' %}">Home</a></li>
+                <li><span class="breadcrumb__current">Profile</span></li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="layout-two-col">
+    <!-- Profile Info -->
+    <div class="card">
+        <div class="card__header">
+            <div class="card__title">Personal Information</div>
+        </div>
+        <div class="card__body">
+            <form method="post" action="{% url 'accounts:profile' %}" novalidate>
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-input" value="{{ user.email }}" disabled>
+                    <div class="form-hint">Contact an administrator to change your email.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_first_name" class="form-label">First Name</label>
+                    <input type="text"
+                           id="id_first_name"
+                           name="first_name"
+                           class="form-input"
+                           value="{{ form.first_name.value|default:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="id_last_name" class="form-label">Last Name</label>
+                    <input type="text"
+                           id="id_last_name"
+                           name="last_name"
+                           class="form-input"
+                           value="{{ form.last_name.value|default:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="id_phone" class="form-label">Phone</label>
+                    <input type="tel"
+                           id="id_phone"
+                           name="phone"
+                           class="form-input"
+                           value="{{ form.phone.value|default:'' }}">
+                </div>
+
+                <div class="d-flex gap-sm justify-end mt-lg">
+                    <button type="submit" class="btn btn--primary">
+                        {% icon "check" "18" %}
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar cards -->
+    <div>
+        <!-- Role & Lab -->
+        <div class="card mb-md">
+            <div class="card__header">
+                <div class="card__title">Account Details</div>
+            </div>
+            <div class="card__body">
+                <div class="mb-sm">
+                    <span class="text-xs text-uppercase text-muted">Role</span>
+                    <div class="text-semibold">{{ user.get_role_display }}</div>
+                </div>
+                <div class="mb-sm">
+                    <span class="text-xs text-uppercase text-muted">Laboratory</span>
+                    <div class="text-semibold">{{ user.laboratory|default:"Not assigned" }}</div>
+                </div>
+                <div class="mb-sm">
+                    <span class="text-xs text-uppercase text-muted">Member Since</span>
+                    <div class="text-semibold">{{ user.date_joined|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="card mb-md">
+            <div class="card__header">
+                <div class="card__title">Security</div>
+            </div>
+            <div class="card__body">
+                <div class="mb-md">
+                    <span class="text-xs text-uppercase text-muted">Two-Factor Authentication</span>
+                    <div class="mt-xs">
+                        {% if has_2fa %}
+                            <span class="pill pill--ok">Enabled</span>
+                        {% else %}
+                            <span class="pill pill--warn">Not configured</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-sm">
+                    <a href="{% url 'accounts:password_change' %}" class="btn btn--secondary btn--sm">
+                        {% icon "lock" "16" %}
+                        Change Password
+                    </a>
+                    {% if not has_2fa %}
+                    <a href="{% url 'accounts:setup_2fa' %}" class="btn btn--secondary btn--sm">
+                        {% icon "lock" "16" %}
+                        Enable 2FA
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

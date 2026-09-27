@@ -1,0 +1,42 @@
+{% load ilims_tags %}
+{% if microbes %}
+{% for m in microbes %}
+<tr>
+    <td><code class="text-mono">{{ m.code }}</code></td>
+    <td><strong>{{ m.name }}</strong></td>
+    <td class="text-muted text-sm">{{ m.scientific_name|default:"—" }}</td>
+    <td>{{ m.category.name|default:"—" }}</td>
+    <td>
+        {% if m.risk_level %}
+        <span class="pill pill--{% if m.risk_level.severity >= 4 %}danger{% elif m.risk_level.severity >= 2 %}warn{% else %}ok{% endif %}">
+            {{ m.risk_level.name }}
+        </span>
+        {% else %}—{% endif %}
+    </td>
+    <td>{% if m.is_active %}<span class="pill pill--ok">Active</span>{% else %}<span class="pill pill--danger">Off</span>{% endif %}</td>
+    <td class="text-right">
+        <div class="d-flex gap-xs justify-end">
+            <a href="{% url 'core:microbe_create' %}?edit={{ m.pk }}"
+               class="btn btn--ghost btn--sm"
+               hx-get="{% url 'core:microbe_create' %}?modal=1&edit={{ m.pk }}"
+               hx-target="#modal-host" hx-swap="innerHTML"
+               title="Edit">
+                {% icon "settings" "16" %}
+            </a>
+            <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                  onsubmit="return confirm('Move {{ m.name }} to Recycle Bin?');">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="microorganism">
+                <input type="hidden" name="id" value="{{ m.pk }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete">
+                    {% icon "close" "16" %}
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="7" class="text-center p-lg text-muted">No microorganisms found.</td></tr>
+{% endif %}

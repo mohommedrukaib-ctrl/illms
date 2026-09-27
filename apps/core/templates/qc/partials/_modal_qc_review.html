@@ -1,0 +1,132 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--xl" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title }}</h2>
+            <button type="button" class="modal__close" data-close-modal>{% icon "close" "20" %}</button>
+        </div>
+
+        <form method="post" action="{% url 'core:qc_review' record.pk %}"
+              hx-post="{% url 'core:qc_review' record.pk %}?modal=1"
+              hx-target="#modal-host" hx-swap="innerHTML">
+            {% csrf_token %}
+
+            <div class="modal__body">
+                {% if blocked_reason %}
+                <div class="message message--warning mb-md" role="alert">
+                    <strong>Four-Eyes Rule Enforced</strong><br>
+                    {{ blocked_reason }}
+                </div>
+                {% endif %}
+
+                {% if form.errors %}
+                <div class="message message--error mb-md" role="alert">
+                    <strong>Fix the following:</strong>
+                    <ul style="margin:6px 0 0 1.1rem;">
+                        {% for field, errs in form.errors.items %}
+                            {% for e in errs %}<li>{{ field }}: {{ e }}</li>{% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Sample Context -->
+                <div class="d-grid gap-md mb-md" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+                    <div>
+                        <div class="text-xs text-muted text-uppercase">Sample</div>
+                        <div class="text-semibold">{{ sample.code }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-muted text-uppercase">Client</div>
+                        <div class="text-semibold">{{ sample.client.name }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-muted text-uppercase">Product</div>
+                        <div class="text-semibold">{{ sample.product_name }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-muted text-uppercase">Requested Test</div>
+                        <div class="text-semibold">{{ sample.requested_test.name|default:"GENERAL" }}</div>
+                    </div>
+                </div>
+
+                <!-- All Attached Tests -->
+                <hr class="divider">
+                <h3 class="text-sm text-uppercase text-muted mb-sm">
+                    Attached Test Results ({{ attached_tests.count }})
+                </h3>
+                <div class="table-container mb-md">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Outcome</th>
+                                <th>Value</th>
+                                <th>Date</th>
+                                <th>Operator</th>
+                                <th>Attachment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in attached_tests %}
+                            <tr>
+                                <td><strong>{{ t.test_type.name }}</strong></td>
+                                <td>
+                                    <span class="pill pill--{{ t.outcome_color }}">
+                                        {{ t.get_result_outcome_display }}
+                                    </span>
+                                </td>
+                                <td>{{ t.result_value|default:"—" }}</td>
+                                <td class="text-muted text-sm">{{ t.test_date|date:"Y-m-d" }}</td>
+                                <td>{{ t.operator.get_short_name|default:"—" }}</td>
+                                <td>
+                                    {% if t.attachment %}
+                                        <a href="{{ t.attachment.url }}" target="_blank" class="text-brand text-xs">View File</a>
+                                    {% else %}
+                                        <span class="text-muted text-xs">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted p-md">
+                                    No tests attached to this sample.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- QC Decision -->
+                <hr class="divider">
+                <h3 class="text-sm text-uppercase text-muted mb-sm">Your QC Decision</h3>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Decision</label>
+                        {{ form.decision }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Safety Classification</label>
+                        {{ form.safety_class }}
+                        <div class="form-hint">Required when approving.</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Review Notes</label>
+                    {{ form.review_notes }}
+                    <div class="form-hint">Required when rejecting or requesting rework.</div>
+                </div>
+            </div>
+
+            <div class="modal__footer">
+                <button type="button" class="btn btn--secondary" data-close-modal>Cancel</button>
+                <button type="submit" class="btn btn--primary" {% if blocked_reason %}disabled{% endif %}>
+                    {% icon "check" "18" %} Save Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static ilims_tags %}
+
+{% block title %}Set Up Two-Factor Authentication — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-center items-center" style="min-height: calc(100vh - 180px); padding: var(--space-md) 0;">
+    <div class="login-card" style="max-width: 480px; margin: 0 auto;">
+        <div class="login-header">
+            <div class="login-logo" aria-hidden="true">IL</div>
+            <h1 class="login-title">Set Up 2FA</h1>
+            <p class="login-subtitle">
+                Your role ({{ user.get_role_display }}) requires two-factor authentication.
+                Scan the QR code or enter the secret key in your authenticator app.
+            </p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message message--{{ message.tags }} mb-md" role="alert">
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="text-center mb-lg">
+            <div class="qr-display" aria-label="QR code for authenticator app" style="margin: 0 auto;">
+                {{ qr_svg|safe }}
+            </div>
+            <p class="text-xs text-muted mt-sm mb-xs">
+                Scan with Google Authenticator, Authy, or 1Password.
+            </p>
+            <div class="border rounded p-sm bg-card text-center mt-sm">
+                <span class="text-xs text-uppercase text-muted d-block mb-xs">Manual Secret Key</span>
+                <code class="text-mono text-brand text-bold" style="font-size: 1.1rem; letter-spacing: 2px;">{{ device.key }}</code>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'accounts:setup_2fa' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group text-center">
+                <label for="id_otp_token" class="form-label form-label--required">
+                    Enter the 6-digit code to confirm
+                </label>
+                <input type="text"
+                       id="id_otp_token"
+                       name="otp_token"
+                       class="form-input form-input--code"
+                       style="margin: 0 auto;"
+                       placeholder="000000"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       pattern="[0-9]{6}"
+                       maxlength="6"
+                       required
+                       autofocus>
+                {% if form.otp_token.errors %}
+                <div class="form-error">
+                    {% for error in form.otp_token.errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md">
+                {% icon "check" "18" %}
+                Activate Two-Factor Authentication
+            </button>
+        </form>
+
+        <div class="text-center mt-lg">
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--ghost text-sm">
+                    Cancel and sign out
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

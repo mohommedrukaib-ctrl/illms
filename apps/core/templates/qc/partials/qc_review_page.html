@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "qc" "24" %}</div>
+        <div class="page-header__text">
+            <h1>QC Review · {{ record.code }}</h1>
+            <p>Sample {{ record.sample.code }} · Test {{ record.test.code }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:qc_queue' %}" class="btn btn--secondary">← Back to Queue</a>
+    </div>
+</div>
+
+<div class="card max-w-lg">
+    <div class="card__body">
+        {% if blocked_reason %}
+        <div class="message message--warning mb-md" role="alert">
+            <strong>Four-Eyes Rule Enforced</strong><br>
+            {{ blocked_reason }}
+        </div>
+        {% endif %}
+
+        {% if form.errors %}
+        <div class="message message--error mb-md">
+            {% for field, errs in form.errors.items %}
+                {% for e in errs %}<div>{{ field }}: {{ e }}</div>{% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Context -->
+        <div class="d-grid gap-md mb-md" style="grid-template-columns:1fr 1fr;">
+            <div>
+                <div class="text-xs text-muted text-uppercase">Sample</div>
+                <div class="text-semibold">{{ record.sample.code }}</div>
+                <div class="text-xs text-muted">{{ record.sample.client.name }}</div>
+            </div>
+            <div>
+                <div class="text-xs text-muted text-uppercase">Operator</div>
+                <div class="text-semibold">{{ record.test.operator.get_full_name|default:"—" }}</div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="table-container mb-md">
+            <table class="table">
+                <thead>
+                    <tr><th>Organism</th><th>Detection</th><th>Ct</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td><strong>{{ r.microorganism.name }}</strong></td>
+                        <td><span class="pill pill--{% if r.detection == 'DETECTED' %}danger{% elif r.detection == 'NOT_DETECTED' %}ok{% else %}warn{% endif %}">{{ r.get_detection_display }}</span></td>
+                        <td>{{ r.ct_value|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted p-md">No results.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <form method="post" action="{% url 'core:qc_review' record.pk %}" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label form-label--required">Decision</label>
+                {{ form.decision }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Food-Safety Classification</label>
+                {{ form.safety_class }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Review Notes</label>
+                {{ form.review_notes }}
+            </div>
+            <div class="d-flex justify-end gap-sm mt-lg">
+                <a href="{% url 'core:qc_queue' %}" class="btn btn--secondary">Cancel</a>
+                <button type="submit" class="btn btn--primary" {% if blocked_reason %}disabled{% endif %}>
+                    Save Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

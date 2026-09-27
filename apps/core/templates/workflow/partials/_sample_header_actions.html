@@ -1,0 +1,7 @@
+<nav aria-label="Breadcrumb" class="mb-sm">
+    <ol class="breadcrumb justify-end">
+        {% for b in breadcrumbs %}
+        <li>{% if b.url %}<a href="{{ b.url }}">{{ b.label }}</a>{% else %}<span class="breadcrumb__current">{{ b.label }}</span>{% endif %}</li>
+        {% endfor %}
+    </ol>
+</nav>
