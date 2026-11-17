@@ -13,8 +13,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = BASE_DIR / "apps"
 
 # Ensure logs directory exists for local logging
-(BASE_DIR / "logs").mkdir(exist_ok=True)
-
+LOGS_DIR = Path("/tmp/logs") if os.environ.get("VERCEL") else (BASE_DIR / "logs")
+try:
+    LOGS_DIR.mkdir(exist_ok=True, parents=True)
+except OSError:
+    pass
 # ──────────────────────────────────────────────
 # CORE DJANGO
 # ──────────────────────────────────────────────
