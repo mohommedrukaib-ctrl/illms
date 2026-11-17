@@ -1,0 +1,97 @@
+{% load ilims_tags %}
+{% if users %}
+    {% for u in users %}
+    <tr>
+        {# 1. Name & Avatar #}
+        <td>
+            <div class="d-flex items-center gap-sm">
+                <div class="topbar__avatar" style="width:28px;height:28px;font-size:10px;">{{ u|initials }}</div>
+                <strong>{{ u.get_full_name|default:u.username }}</strong>
+            </div>
+        </td>
+
+        {# 2. Username #}
+        <td><code class="text-mono">{{ u.username }}</code></td>
+
+        {# 3. Email #}
+        <td class="text-sm">{{ u.email|default:"—" }}</td>
+
+        {# 4. Role #}
+        <td>
+            <span class="pill pill--{% if u.role == 'ADMIN' %}danger{% elif u.role == 'QC_OFFICER' %}brand{% elif u.role == 'FOOD_SAFETY_OFFICER' %}warn{% else %}info{% endif %}">
+                {{ u.get_role_display|default:u.role }}
+            </span>
+        </td>
+
+        {# 5. Laboratory #}
+        <td class="text-sm">{{ u.laboratory.name|default:"—" }}</td>
+
+        {# 6. Status #}
+        <td>
+            {% if u.is_deleted %}
+                <span class="pill pill--danger">Deleted</span>
+            {% elif u.is_active %}
+                <span class="pill pill--ok">Active</span>
+            {% else %}
+                <span class="pill pill--warn">Inactive</span>
+            {% endif %}
+        </td>
+
+        {# 7. Actions #}
+        <td class="text-right">
+            <div class="d-flex gap-xs justify-end items-center">
+                <!-- Administrative Password Reset -->
+                <a href="{% url 'core:user_reset_password' u.pk %}"
+                   class="btn btn--ghost btn--sm"
+                   style="color: var(--warn);"
+                   hx-get="{% url 'core:user_reset_password' u.pk %}?modal=1"
+                   hx-target="#modal-host" hx-swap="innerHTML"
+                   title="Reset Password">
+                    {% icon "lock" "16" %}
+                </a>
+                
+                <!-- Edit Settings -->
+                <a href="{% url 'core:user_create' %}?edit={{ u.pk }}"
+                   class="btn btn--ghost btn--sm"
+                   hx-get="{% url 'core:user_create' %}?modal=1&edit={{ u.pk }}"
+                   hx-target="#modal-host" hx-swap="innerHTML"
+                   title="Edit User">
+                    {% icon "settings" "16" %}
+                </a>
+
+                <!-- Toggle Active State -->
+                {% if u.pk != request.user.pk %}
+                <form method="post" action="{% url 'core:user_toggle' u.pk %}" style="display:inline;"
+                      onsubmit="return confirm('Toggle active state for {{ u.username }}?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm"
+                            style="color:{% if u.is_active %}var(--danger){% else %}var(--ok){% endif %};"
+                            title="{% if u.is_active %}Deactivate Account{% else %}Activate Account{% endif %}">
+                        {% if u.is_active %}{% icon "close" "16" %}{% else %}{% icon "check" "16" %}{% endif %}
+                    </button>
+                </form>
+
+                <!-- Soft Delete Trigger -->
+                <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                      onsubmit="return confirm('Move user {{ u.username }} to the Recycle Bin?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="model" value="user">
+                    <input type="hidden" name="id" value="{{ u.pk }}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete User">
+                        {% icon "trash" "16" %}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr><td colspan="7" class="text-center p-lg text-muted">No users match your filters.</td></tr>
+{% endif %}
+
+{# Keep HTMX pagination synced on filter #}
+<div id="pagination-wrapper" hx-swap-oob="true">
+    {% include "partials/_pagination.html" %}
+</div>

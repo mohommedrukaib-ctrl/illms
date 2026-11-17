@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Audit Trail — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "audit" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right d-flex gap-sm">
+        <a href="{% url 'core:audit_verify' %}" class="btn btn--primary">
+            {% icon "check" "18" %} Verify Hash Chain
+        </a>
+        <a href="{% url 'core:audit_export' %}" class="btn btn--secondary">
+            {% icon "print" "18" %} Export CSV
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card__header">
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;"
+              hx-get="{% url 'core:audit_list' %}"
+              hx-target="#audit-tbody"
+              hx-trigger="keyup delay:400ms from:input, change from:select"
+              hx-swap="innerHTML">
+            
+            <input type="search" name="q" class="form-input" placeholder="Search record ID, user, hash…"
+                   value="{{ current_q }}" style="max-width:240px;">
+
+            <select name="action" class="form-input" style="max-width:180px;">
+                <option value="">All Actions</option>
+                {% for act in actions %}
+                <option value="{{ act }}" {% if current_action == act %}selected{% endif %}>{{ act }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="model" class="form-input" style="max-width:180px;">
+                <option value="">All Models</option>
+                {% for mdl in models %}
+                <option value="{{ mdl }}" {% if current_model == mdl %}selected{% endif %}>{{ mdl }}</option>
+                {% endfor %}
+            </select>
+
+            <noscript><button type="submit" class="btn btn--secondary">Filter</button></noscript>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>User</th>
+                    <th>Model</th>
+                    <th>Record ID</th>
+                    <th>SHA-256 Hash</th>
+                    <th class="text-right">Diff</th>
+                </tr>
+            </thead>
+            <tbody id="audit-tbody">
+                {% include "audit/partials/_audit_list_rows.html" %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

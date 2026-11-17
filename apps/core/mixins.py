@@ -27,11 +27,16 @@ class HtmxModalMixin:
     Class-based-view / function-view helper.
 
     Behavior:
+
       - If the request is HTMX AND `ui.modals` flag is enabled:
+
+      - If the request is HTMX AND `ui.modals` flag is enabled AND modal!=0:
+
           -> render the modal fragment (partial template).
       - Otherwise:
           -> render the full standalone page (same form) that redirects
              to `?next=` upon success.
+
 
     Both paths must call the SAME form class and the SAME success handler.
 
@@ -41,6 +46,8 @@ class HtmxModalMixin:
             page_template  = "clients/create.html"
             form_class     = ClientForm
             success_url_name = "clients:list"
+
+
     """
     modal_template = ""
     page_template = ""
@@ -48,11 +55,28 @@ class HtmxModalMixin:
 
     def _is_modal(self, request):
         from apps.core.models import flag_enabled
+
         is_htmx = getattr(request, "htmx", False)
      # django-htmx sets request.htmx to an HtmxDetails object (truthy) or False
         if hasattr(is_htmx, "request"):
             is_htmx = True
         return bool(is_htmx) and flag_enabled("ui.modals") and request.GET.get("modal") != "0"
+
+
+
+        is_htmx = getattr(request, "htmx", False)
+        # django-htmx sets request.htmx to an HtmxDetails object (truthy) or False
+        if hasattr(is_htmx, "request"):
+            is_htmx = True
+        is_htmx = bool(is_htmx)
+
+        try:
+            modals_enabled = flag_enabled("ui.modals")
+        except Exception:
+            modals_enabled = True
+
+        not_forced_page = request.GET.get("modal") != "0" and request.POST.get("modal") != "0"
+        return is_htmx and modals_enabled and not_forced_page
 
 
     def render_modal_or_page(self, request, context, status=200):
@@ -78,4 +102,8 @@ class HtmxModalMixin:
         response = HttpResponse(body)
         if refresh_target:
             response["HX-Trigger"] = f'{{"ilims:refresh":"{refresh_target}"}}'
+
         return response 
+
+        return response
+

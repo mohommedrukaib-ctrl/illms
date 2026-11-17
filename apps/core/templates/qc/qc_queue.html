@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}QC Queue — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "qc" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">{% icon "qc" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Pending Review</div>
+            <div class="stat-card__value">{{ counts.pending }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--ok">
+        <div class="stat-card__icon">{% icon "check" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Approved</div>
+            <div class="stat-card__value">{{ counts.approved }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--info">
+        <div class="stat-card__icon">{% icon "flask" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Rework</div>
+            <div class="stat-card__value">{{ counts.rework }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--danger">
+        <div class="stat-card__icon">{% icon "close" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Rejected</div>
+            <div class="stat-card__value">{{ counts.rejected }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="?status=PENDING" class="tab {% if current_status == 'PENDING' %}active{% endif %}">Pending</a>
+    <a href="?status=APPROVED" class="tab {% if current_status == 'APPROVED' %}active{% endif %}">Approved</a>
+    <a href="?status=REWORK" class="tab {% if current_status == 'REWORK' %}active{% endif %}">Rework</a>
+    <a href="?status=REJECTED" class="tab {% if current_status == 'REJECTED' %}active{% endif %}">Rejected</a>
+</div>
+
+<div class="card">
+    <div class="card__header">
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;"
+              hx-get="{% url 'core:qc_queue' %}" hx-target="#qc-tbody"
+              hx-trigger="keyup delay:400ms from:input" hx-swap="innerHTML">
+            <input type="hidden" name="status" value="{{ current_status }}">
+            <input type="search" name="q" class="form-input"
+                   placeholder="Search QC code, sample, client, product…"
+                   value="{{ current_q }}" style="max-width:320px;">
+            <noscript><button type="submit" class="btn btn--secondary">Search</button></noscript>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>QC Code</th>
+                    <th>Sample</th>
+                    <th>Client</th>
+                    <th>Product</th>
+                    <th>Requested Test</th>
+                    <th>Test Runs</th>
+                    <th>Decision</th>
+                    <th>Safety</th>
+                    <th>Reviewer</th>
+                    <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody id="qc-tbody">
+                {% include "qc/partials/_qc_queue_rows.html" %}
+            </tbody>
+        </table>
+        {% include "partials/_pagination.html" %}
+    </div>
+</div>
+{% endblock %}

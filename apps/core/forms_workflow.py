@@ -1,5 +1,6 @@
 from django import forms
-from apps.core.models import Client, Sample
+
+from apps.core.models import Client, LabMethod, Sample
 from apps.core.widgets import SmartModelChoiceField, SmartSelect
 
 
@@ -18,13 +19,22 @@ class ClientForm(forms.ModelForm):
             "address": forms.Textarea(attrs={"class": "form-textarea", "rows": 2}),
         }
 
-    def __init__(self, *args, next_url="", **kwargs):
+    def __init__(self, *args, next_url="", request_get=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["country"].widget.next_url = next_url
         self.fields["region"].widget.next_url = next_url
         self.fields["name"].required = True
         self.fields["phone"].required = True
         self.fields["country"].required = True
+
+        if request_get:
+            for field in ("country", "region"):
+                val = request_get.get(field)
+                text_val = request_get.get(f"{field}__text")
+                if val and field in self.fields:
+                    self.initial[field] = val
+                    if text_val and hasattr(self.fields[field].widget, "attrs"):
+                        self.fields[field].widget.attrs["data-prefill-display"] = text_val
 
     def clean_name(self):
         name = (self.cleaned_data.get("name") or "").strip()
@@ -47,9 +57,10 @@ class ClientForm(forms.ModelForm):
 class SampleForm(forms.ModelForm):
     client_name = forms.CharField(
         label="Client Name",
-        required=True,
+        required=False,
         widget=SmartSelect(kind_key="client", allow_create=False),
     )
+
     client_phone = forms.CharField(
         label="Client Phone",
         required=False,
@@ -66,33 +77,41 @@ class SampleForm(forms.ModelForm):
         required=False,
         widget=SmartSelect(kind_key="product_category", allow_create=False),
     )
+
     product_type = forms.CharField(
         label="Product Type",
         required=False,
-        widget=SmartSelect(
-            kind_key="product_type", allow_create=False,
-            attrs={"disabled": "disabled"}
-        ),
+        widget=SmartSelect(kind_key="product_type", allow_create=False),
     )
 
     molecular_type = forms.ChoiceField(
         label="Molecular Type",
-        required=True,
+        required=False,
         choices=[("", "— Select molecular workflow —")] + list(Sample.MolecularType.choices),
         widget=forms.Select(attrs={"class": "form-input", "id": "id_molecular_type"}),
     )
 
     requested_test = forms.CharField(
         label="Requested Test Method",
-        required=False,  # validated manually in clean()
+        required=False,
         widget=SmartSelect(
-            kind_key="lab_method", allow_create=False,
-            attrs={"disabled": "disabled"}
+            kind_key="lab_method",
+            allow_create=False,
+            attrs={
+                "placeholder": "Type test (e.g. DENGUE NS1, SALMONELLA, PH)…",
+                "oninput": "this.value = this.value.toUpperCase();",
+                "style": "text-transform: uppercase;",
+            }
         ),
+        help_text="Type any diagnostic test. Auto-uppercases to prevent duplicates.",
     )
 
     assigned_to = SmartModelChoiceField(
         kind_key="user", allow_create=False, required=False, label="Assigned Technician"
+    )
+
+    laboratory = SmartModelChoiceField(
+        kind_key="laboratory", allow_create=False, required=False, label="Laboratory Facility"
     )
 
     class Meta:
@@ -100,10 +119,13 @@ class SampleForm(forms.ModelForm):
         fields = [
             "product_name", "priority", "storage_condition", "due_date",
             "received_date", "production_date", "expiry_date",
-            "assigned_to", "remarks",
+            "assigned_to", "laboratory", "remarks",
         ]
         widgets = {
-            "product_name": forms.TextInput(attrs={"class": "form-input"}),
+            "product_name": forms.TextInput(attrs={
+                "class": "form-input",
+                "placeholder": "e.g. Drinking Water, Blood Sample"
+            }),
             "priority": forms.Select(attrs={"class": "form-input"}),
             "storage_condition": forms.Select(attrs={"class": "form-input"}),
             "due_date": forms.DateInput(attrs={"class": "form-input", "type": "date"}),
@@ -113,12 +135,11 @@ class SampleForm(forms.ModelForm):
             "remarks": forms.Textarea(attrs={"class": "form-textarea", "rows": 2}),
         }
 
-    def __init__(self, *args, next_url="", hide_advanced=False,
+    def __init__(self, *args, next_url="", request_get=None, hide_advanced=False,
                  lock_molecular_type=False, initial_molecular_type=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Set next_url on all smart widgets
-        for name in ("client_name", "product_category", "product_type", "requested_test", "assigned_to"):
+        for name in ("client_name", "product_category", "product_type", "requested_test", "assigned_to", "laboratory"):
             if name in self.fields:
                 w = self.fields[name].widget
                 if hasattr(w, "next_url"):
@@ -128,13 +149,11 @@ class SampleForm(forms.ModelForm):
         self.fields["product_name"].required = True
         self.fields["received_date"].required = True
 
-        # Store for use in clean()
         self._initial_molecular_type = initial_molecular_type
         self._lock_molecular_type = lock_molecular_type
 
         if initial_molecular_type:
             self.fields["molecular_type"].initial = initial_molecular_type
-            # Unlock requested_test immediately
             self.fields["requested_test"].widget.attrs.pop("disabled", None)
             if lock_molecular_type:
                 self.fields["molecular_type"].widget.attrs["disabled"] = "disabled"
@@ -142,8 +161,44 @@ class SampleForm(forms.ModelForm):
                     "background:var(--ok-light);border-color:var(--ok);"
                 )
 
-        # On POST: unlock widgets if values were submitted
-        if self.data:
+        # Prepopulate and LOCK fields when editing an existing saved sample
+        is_edit = getattr(self, "instance", None) and self.instance.pk
+        
+        if is_edit:
+            if getattr(self.instance, "client_id", None) and getattr(self.instance, "client", None):
+                self.initial["client_name"] = str(self.instance.client_id)
+                self.fields["client_name"].widget.attrs["data-prefill-display"] = self.instance.client.name
+            if getattr(self.instance, "product_category_id", None) and getattr(self.instance, "product_category", None):
+                self.initial["product_category"] = str(self.instance.product_category_id)
+                self.fields["product_category"].widget.attrs["data-prefill-display"] = self.instance.product_category.name
+            if getattr(self.instance, "product_type_id", None) and getattr(self.instance, "product_type", None):
+                self.initial["product_type"] = str(self.instance.product_type_id)
+                self.fields["product_type"].widget.attrs["data-prefill-display"] = self.instance.product_type.name
+            if getattr(self.instance, "requested_test_id", None) and getattr(self.instance, "requested_test", None):
+                self.initial["requested_test"] = self.instance.requested_test.name
+
+            self.fields["client_name"].disabled = True
+            self.fields["product_category"].disabled = True
+            self.fields["product_type"].disabled = True
+            self.fields["received_date"].disabled = True
+            
+            for f in ["client_name", "product_category", "product_type"]:
+                self.fields[f].widget.attrs["readonly"] = "readonly"
+                self.fields[f].widget.attrs["style"] = "background: var(--bg-body); cursor: not-allowed; opacity: 0.8;"
+
+        if request_get:
+            for field in ("client_name", "product_category", "product_type", "requested_test", "assigned_to", "laboratory"):
+                val = request_get.get(field)
+                text_val = request_get.get(f"{field}__text")
+                if (val or text_val) and field in self.fields:
+                    if val:
+                        self.initial[field] = val
+                    if text_val and hasattr(self.fields[field].widget, "attrs"):
+                        self.fields[field].widget.attrs["data-prefill-display"] = text_val
+                    if field in ("product_type", "requested_test"):
+                        self.fields[field].widget.attrs.pop("disabled", None)
+
+        if self.data and not is_edit:
             client_text = (self.data.get("client_name__text") or "").strip()
             client_pk = (self.data.get("client_name") or "").strip()
             if client_text and not client_pk:
@@ -168,17 +223,10 @@ class SampleForm(forms.ModelForm):
         raw = (self.data.get(field) or "").strip()
         return text or raw
 
-    def clean_molecular_type(self):
-        val = (self.cleaned_data.get("molecular_type") or "").strip()
-        if not val and self._initial_molecular_type:
-            # Locked field wasn't submitted — use the initial value
-            return self._initial_molecular_type
+    def clean_client_name(self):
+        val = self._text_or_pk("client_name")
         if not val:
-            # Check mirror hidden field
-            mirror = (self.data.get("molecular_type_mirror") or "").strip()
-            if mirror:
-                return mirror
-            raise forms.ValidationError("You must select a molecular type.")
+            raise forms.ValidationError("This field is required.")
         return val
 
     def clean_product_name(self):
@@ -190,13 +238,11 @@ class SampleForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
 
-        # Safely extract smart-select text values — never crash here
         cleaned["_category_text"] = self._text_or_pk("product_category")
         cleaned["_type_text"] = self._text_or_pk("product_type")
-        cleaned["_test_text"] = self._text_or_pk("requested_test")
+        cleaned["_test_text"] = cleaned.get("requested_test") or self._text_or_pk("requested_test").strip().upper()
         cleaned["_client_text"] = self._text_or_pk("client_name")
 
-        # Molecular type fallback (disabled field not submitted by browser)
         if not cleaned.get("molecular_type"):
             mirror = (self.data.get("molecular_type_mirror") or "").strip()
             if mirror:
@@ -204,17 +250,12 @@ class SampleForm(forms.ModelForm):
             elif self._initial_molecular_type:
                 cleaned["molecular_type"] = self._initial_molecular_type
 
-        # Validate requested test only if molecular type is set
-        mol = cleaned.get("molecular_type")
-        test_text = cleaned.get("_test_text", "")
-        if mol and not test_text:
-            self.add_error("requested_test", "A requested test method is required.")
-
         return cleaned
 
 
 class AdvanceStatusForm(forms.Form):
-    """Simple hardcoded status dropdown — no database lookup."""
+    """Simple status dropdown — no database lookup."""
+
     to_state = forms.ChoiceField(
         label="New Status",
         choices=Sample.WorkflowState.choices,

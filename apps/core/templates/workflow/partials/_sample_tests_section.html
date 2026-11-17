@@ -1,0 +1,86 @@
+{% load ilims_tags %}
+<div id="sample-tests-section">
+    <div class="card mb-md">
+        <div class="card__header d-flex items-center justify-between">
+            <div>
+                <div class="card__title">Attached Laboratory Tests</div>
+                <div class="card__subtitle">{{ attached_tests.count }} test{{ attached_tests.count|pluralize }} recorded</div>
+            </div>
+            {% if not is_locked %}
+            <a href="{% url 'core:sample_test_attach' sample.pk %}"
+               class="btn btn--primary btn--sm"
+               hx-get="{% url 'core:sample_test_attach' sample.pk %}?modal=1"
+               hx-target="#modal-host" hx-swap="innerHTML">
+                {% icon "plus" "16" %} Attach Test
+            </a>
+            {% endif %}
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Test Code</th>
+                        <th>Test Name</th>
+                        <th>Outcome</th>
+                        <th>Details / Quantitative</th>
+                        <th>Date</th>
+                        <th>Operator</th>
+                        <th>Attachment</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in attached_tests %}
+                    <tr>
+                        <td><code class="text-mono">{{ t.code }}</code></td>
+                        <td><strong>{{ t.test_type.name }}</strong></td>
+                        <td>
+                            <span class="pill pill--{{ t.outcome_color }}">
+                                {{ t.get_result_outcome_display }}
+                            </span>
+                        </td>
+                        <td>{{ t.result_value|default:"—" }}</td>
+                        <td>{{ t.test_date|date:"Y-m-d" }}</td>
+                        <td>{{ t.operator.get_short_name|default:"—" }}</td>
+                        <td>
+                            {% if t.attachment %}
+                                <a href="{{ t.attachment.url }}" target="_blank" class="btn btn--ghost btn--sm" style="color:var(--brand);" title="Download scan/report">
+                                    {% icon "report" "16" %} View File
+                                </a>
+                            {% else %}
+                                <span class="text-muted text-xs">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <div class="d-flex gap-xs justify-end">
+                                <a href="{% url 'core:sample_test_attach' sample.pk %}?edit={{ t.pk }}"
+                                   class="btn btn--ghost btn--sm"
+                                   hx-get="{% url 'core:sample_test_attach' sample.pk %}?modal=1&edit={{ t.pk }}"
+                                   hx-target="#modal-host" hx-swap="innerHTML" title="Edit Test">
+                                    {% icon "settings" "16" %}
+                                </a>
+                                <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                                      onsubmit="return confirm('Delete test {{ t.test_type.name }}?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="model" value="sample_test">
+                                    <input type="hidden" name="id" value="{{ t.pk }}">
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete">
+                                        {% icon "close" "16" %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center p-lg text-muted">
+                            No tests attached to this sample yet. Click <strong>Attach Test</strong> to record diagnostic results.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

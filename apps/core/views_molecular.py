@@ -1,5 +1,6 @@
 import uuid
 from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -7,6 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 
@@ -17,8 +19,9 @@ from apps.core.forms_molecular import (
 from apps.core.mixins import HtmxModalMixin, ILIMSViewMixin
 from apps.core.models import (
     DnaExtraction, Microorganism, MolecularTest, LabMethod,
-    ProductCategory, RiskLevel, Sample, flag_enabled, next_code
+    ProductCategory, RiskLevel, Sample, Reminder, flag_enabled, next_code,
 )
+from apps.core.notifications import push_notification
 
 
 def _is_uuid(val) -> bool:
@@ -32,9 +35,69 @@ def _is_uuid(val) -> bool:
 
 
 def _full_reload(url: str) -> HttpResponse:
-    response = HttpResponse(status=200)
+    """
+    Return an HTMX redirect that also works as a fallback meta-refresh.
+    This guarantees the browser navigates to `url` even if HX-Redirect
+    is swallowed by the modal hx-target.
+    """
+    body = (
+        f'<div id="modal-host" hx-swap-oob="innerHTML"></div>'
+        f'<meta http-equiv="refresh" content="0;url={url}">'
+    )
+    response = HttpResponse(body, status=200)
     response["HX-Redirect"] = url
+    response["HX-Trigger"] = "ilims:refresh"
     return response
+
+
+def _create_test_reminder(*, sample, assignee, request_user, title, message=""):
+    """Helper to create a workbench reminder + optional notification for molecular tests."""
+    if not sample or not assignee:
+        return
+
+    due = sample.due_date or timezone.now().date()
+    today = timezone.now().date()
+    days = (due - today).days
+
+    if days < 0:
+        kind = Reminder.Kind.OVERDUE
+    elif days == 0:
+        kind = Reminder.Kind.DUE_TODAY
+    elif days <= 2:
+        kind = Reminder.Kind.DUE_SOON
+    else:
+        kind = Reminder.Kind.CUSTOM
+
+    priority = (
+        Reminder.Priority.HIGH
+        if getattr(sample, "priority", "") == "URGENT"
+        else Reminder.Priority.NORMAL
+    )
+
+    # Prevent duplicate open reminders for the same test
+    if Reminder.objects.filter(
+        sample=sample, assigned_to=assignee, title=title, is_done=False
+    ).exists():
+        return
+
+    Reminder.objects.create(
+        kind=kind,
+        priority=priority,
+        title=title,
+        message=message or f"Sample {sample.code} · {sample.product_name}",
+        sample=sample,
+        assigned_to=assignee,
+        due_date=due,
+    )
+
+    if assignee != request_user:
+        push_notification(
+            user=assignee,
+            title=title,
+            message=message or f"New test work item for {sample.code}",
+            level="info",
+            url=reverse("core:sample_detail", args=[sample.pk]),
+        )
 
 
 def _generate_microbe_code(name):
@@ -140,13 +203,28 @@ class MicrobeCreateView(HtmxModalMixin, LoginRequiredMixin, View):
     page_template = "molecular/microbe_form_page.html"
     modal_title = "Add Microorganism"
 
+    def _get_instance(self, request):
+        edit_pk = request.GET.get("edit") or request.POST.get("edit")
+        if edit_pk:
+            try:
+                return Microorganism.objects.get(pk=edit_pk, is_deleted=False)
+            except Microorganism.DoesNotExist:
+                pass
+        return None
+
     def get(self, request):
+        instance = self._get_instance(request)
+        title = "Edit Microorganism" if instance else self.modal_title
+        form = MicroorganismForm(instance=instance)
         return self.render_modal_or_page(request, {
-            "form": MicroorganismForm(), "modal_title": self.modal_title,
+            "form": form, "modal_title": title, "edit_pk": instance.pk if instance else "",
         })
 
     def post(self, request):
-        form = MicroorganismForm(request.POST)
+        instance = self._get_instance(request)
+        title = "Edit Microorganism" if instance else self.modal_title
+        form = MicroorganismForm(request.POST, instance=instance)
+
         cat_text = (request.POST.get("category_name__text") or "").strip()
         cat = ProductCategory.objects.filter(name__iexact=cat_text, is_active=True).first() if cat_text else None
         risk_text = (request.POST.get("risk_name__text") or "").strip()
@@ -159,15 +237,17 @@ class MicrobeCreateView(HtmxModalMixin, LoginRequiredMixin, View):
             if not obj.code:
                 obj.code = _generate_microbe_code(obj.name)
             obj.save()
-            log_audit(request.user, "CREATE", obj, get_changes(None, obj, ["name", "code"]))
+
+            action = "UPDATE" if instance else "CREATE"
+            log_audit(request.user, action, obj, get_changes(instance, obj, ["name", "code"]))
 
             if self._is_modal(request):
                 return _full_reload(reverse("core:microbe_list") + f"?saved={obj.name}")
-            messages.success(request, f"{obj.name} added.")
+            messages.success(request, f"{obj.name} {'updated' if instance else 'added'}.")
             return redirect("core:microbe_list")
 
         return self.render_modal_or_page(request, {
-            "form": form, "modal_title": self.modal_title,
+            "form": form, "modal_title": title, "edit_pk": instance.pk if instance else "",
         }, status=400)
 
 
@@ -283,7 +363,16 @@ class DnaCreateView(HtmxModalMixin, LoginRequiredMixin, View):
             if sample.workflow_state == "RECEIVED":
                 sample.advance(request.user, "TESTING", notes=f"DNA extraction {obj.code} logged")
 
-            # Live swap if called from sample detail
+            # ── REMINDER: Trigger for new DNA Extraction ──
+            assignee = obj.operator or sample.assigned_to or request.user
+            _create_test_reminder(
+                sample=sample,
+                assignee=assignee,
+                request_user=request.user,
+                title=f"Complete DNA extraction: {obj.code} ({sample.code})",
+                message=f"{obj.method.name if obj.method else 'DNA Extraction'} · {sample.product_name}"
+            )
+
             from_detail = request.POST.get("from_detail") == "1"
             if from_detail and self._is_modal(request):
                 return _render_sample_sections_swap(request, sample, obj.code)
@@ -460,9 +549,21 @@ class TestCreateView(HtmxModalMixin, LoginRequiredMixin, View):
             if sample.workflow_state == "RECEIVED":
                 sample.advance(request.user, "TESTING", notes=f"Test {obj.code} registered")
 
+            # ── REMINDER: Trigger for new Molecular Test ──
+            assignee = obj.operator or sample.assigned_to or request.user
+            _create_test_reminder(
+                sample=sample,
+                assignee=assignee,
+                request_user=request.user,
+                title=f"Complete molecular run: {obj.code} ({sample.code})",
+                message=f"{obj.test_type.name if obj.test_type else 'Molecular Assay'} · {sample.product_name}"
+            )
+
             if target_created:
-                messages.warning(request,
-                    f"New microorganism '{target.name}' added (pending admin activation).")
+                messages.warning(
+                    request,
+                    f"New microorganism '{target.name}' added (pending admin activation)."
+                )
 
             from_detail = request.POST.get("from_detail") == "1"
             if from_detail and self._is_modal(request):

@@ -4,4 +4,242 @@ CREATE DATABASE ilims_db OWNER ilims_user;
 GRANT ALL PRIVILEGES ON DATABASE ilims_db TO ilims_user;
 -- Grant schema permissions (PostgreSQL 15+ requirement)
 \c ilims_db
+
 GRANT ALL ON SCHEMA public TO ilims_user;
+
+GRANT ALL ON SCHEMA public TO ilims_user;
+
+from apps.core.models import FeatureFlag
+FeatureFlag.objects.get_or_create(
+    key="module.qc_approval",
+    defaults={
+        "label": "QC Approval",
+        "group": "Modules",
+        "description": "Four-eyes QC review and food-safety classification.",
+        "enabled": True,
+        "is_core": False,
+    },
+)
+
+from apps.core.models import (
+    Country, Region, Laboratory, ProductCategory, ProductType,
+    LabMethod, Microorganism, RiskLevel, FeatureFlag, SystemSetting,
+)
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+print("=== Seeding Countries ===")
+countries_data = [
+    {"name": "Sri Lanka", "iso2": "LK", "iso3": "LKA", "dial_code": "+94", "currency": "LKR", "timezone": "Asia/Colombo"},
+    {"name": "India", "iso2": "IN", "iso3": "IND", "dial_code": "+91", "currency": "INR", "timezone": "Asia/Kolkata"},
+    {"name": "United States", "iso2": "US", "iso3": "USA", "dial_code": "+1", "currency": "USD", "timezone": "America/New_York"},
+    {"name": "United Kingdom", "iso2": "GB", "iso3": "GBR", "dial_code": "+44", "currency": "GBP", "timezone": "Europe/London"},
+    {"name": "Australia", "iso2": "AU", "iso3": "AUS", "dial_code": "+61", "currency": "AUD", "timezone": "Australia/Sydney"},
+    {"name": "Maldives", "iso2": "MV", "iso3": "MDV", "dial_code": "+960", "currency": "MVR", "timezone": "Indian/Maldives"},
+    {"name": "Singapore", "iso2": "SG", "iso3": "SGP", "dial_code": "+65", "currency": "SGD", "timezone": "Asia/Singapore"},
+    {"name": "United Arab Emirates", "iso2": "AE", "iso3": "ARE", "dial_code": "+971", "currency": "AED", "timezone": "Asia/Dubai"},
+]
+for c in countries_data:
+    obj, created = Country.objects.get_or_create(iso2=c["iso2"], defaults=c)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Regions (Sri Lanka) ===")
+lk = Country.objects.get(iso2="LK")
+regions_data = [
+    {"code": "WP", "name": "Western Province"},
+    {"code": "CP", "name": "Central Province"},
+    {"code": "SP", "name": "Southern Province"},
+    {"code": "NP", "name": "Northern Province"},
+    {"code": "EP", "name": "Eastern Province"},
+    {"code": "NWP", "name": "North Western Province"},
+    {"code": "NCP", "name": "North Central Province"},
+    {"code": "UP", "name": "Uva Province"},
+    {"code": "SG", "name": "Sabaragamuwa Province"},
+]
+for r in regions_data:
+    obj, created = Region.objects.get_or_create(country=lk, code=r["code"], defaults={"name": r["name"]})
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Laboratories ===")
+wp = Region.objects.get(code="WP", country=lk)
+labs_data = [
+    {"code": "LAB-01", "name": "ILIMS Central Food Safety Lab", "country": lk, "region": wp, "address": "123 Lab Road, Colombo 07", "phone": "+94 11 234 5678", "email": "central@ilims.lk"},
+    {"code": "LAB-02", "name": "ILIMS Southern Regional Lab", "country": lk, "region": Region.objects.get(code="SP", country=lk), "address": "456 South Ave, Galle", "phone": "+94 91 234 5678", "email": "south@ilims.lk"},
+]
+for lab in labs_data:
+    obj, created = Laboratory.objects.get_or_create(code=lab["code"], defaults=lab)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Risk Levels ===")
+risk_data = [
+    {"name": "Low", "color": "ok", "severity": 1},
+    {"name": "Medium", "color": "warn", "severity": 2},
+    {"name": "High", "color": "danger", "severity": 4},
+    {"name": "Critical", "color": "danger", "severity": 5},
+]
+for r in risk_data:
+    obj, created = RiskLevel.objects.get_or_create(name=r["name"], defaults=r)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Product Categories ===")
+cat_data = [
+    {"name": "Food", "description": "All food products for human consumption"},
+    {"name": "Water", "description": "Drinking water, bottled water, process water"},
+    {"name": "Swab", "description": "Environmental and surface swabs"},
+    {"name": "Environmental", "description": "Air, soil, and surface samples"},
+    {"name": "Feed", "description": "Animal feed and pet food"},
+]
+for c in cat_data:
+    obj, created = ProductCategory.objects.get_or_create(name=c["name"], defaults=c)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Product Types ===")
+food_cat = ProductCategory.objects.get(name="Food")
+water_cat = ProductCategory.objects.get(name="Water")
+swab_cat = ProductCategory.objects.get(name="Swab")
+type_data = [
+    {"name": "Dairy", "category": food_cat},
+    {"name": "Raw Meat", "category": food_cat},
+    {"name": "Poultry", "category": food_cat},
+    {"name": "Seafood", "category": food_cat},
+    {"name": "Vegetables", "category": food_cat},
+    {"name": "Fruits", "category": food_cat},
+    {"name": "Spices", "category": food_cat},
+    {"name": "Bakery", "category": food_cat},
+    {"name": "Beverages", "category": food_cat},
+    {"name": "Ready-to-Eat", "category": food_cat},
+    {"name": "Frozen Food", "category": food_cat},
+    {"name": "Canned Food", "category": food_cat},
+    {"name": "Drinking Water", "category": water_cat},
+    {"name": "Bottled Water", "category": water_cat},
+    {"name": "Process Water", "category": water_cat},
+    {"name": "Surface Swab", "category": swab_cat},
+    {"name": "Equipment Swab", "category": swab_cat},
+]
+for t in type_data:
+    obj, created = ProductType.objects.get_or_create(name=t["name"], defaults=t)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Lab Methods ===")
+methods_data = [
+    # DNA Extraction
+    {"name": "Spin Column Extraction", "category": "DNA_EXTRACTION", "description": "Silica-membrane spin column (e.g., Qiagen DNeasy)"},
+    {"name": "Magnetic Bead Extraction", "category": "DNA_EXTRACTION", "description": "Magnetic bead-based purification (e.g., MagMAX)"},
+    {"name": "Phenol-Chloroform Extraction", "category": "DNA_EXTRACTION", "description": "Traditional organic extraction"},
+    {"name": "Boiling Lysis", "category": "DNA_EXTRACTION", "description": "Rapid boiling method for quick screening"},
+    # PCR / qPCR
+    {"name": "Real-Time qPCR", "category": "TEST", "description": "Quantitative real-time PCR with SYBR Green or TaqMan probes"},
+    {"name": "Multiplex qPCR", "category": "TEST", "description": "Multi-target qPCR in a single reaction"},
+    {"name": "End-Point PCR", "category": "TEST", "description": "Conventional PCR with gel electrophoresis"},
+    {"name": "Nested PCR", "category": "TEST", "description": "Two-round PCR for increased sensitivity"},
+    {"name": "Digital PCR", "category": "TEST", "description": "Droplet digital PCR for absolute quantification"},
+    # Sequencing
+    {"name": "Sanger Sequencing", "category": "SEQUENCING", "description": "Capillary electrophoresis sequencing of PCR amplicons"},
+    {"name": "16S rRNA Sequencing", "category": "SEQUENCING", "description": "Full or partial 16S rRNA gene sequencing for bacterial ID"},
+    {"name": "Whole Genome Sequencing", "category": "SEQUENCING", "description": "WGS using Illumina or Oxford Nanopore"},
+    {"name": "Metagenomic Sequencing", "category": "SEQUENCING", "description": "Shotgun metagenomics for community profiling"},
+]
+for m in methods_data:
+    obj, created = LabMethod.objects.get_or_create(name=m["name"], defaults=m)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding Microorganisms ===")
+high_risk = RiskLevel.objects.get(name="High")
+critical_risk = RiskLevel.objects.get(name="Critical")
+medium_risk = RiskLevel.objects.get(name="Medium")
+microbe_data = [
+    {"name": "Salmonella enterica", "scientific_name": "Salmonella enterica", "code": "SALM", "risk_level": critical_risk, "description": "Major foodborne pathogen; causes salmonellosis"},
+    {"name": "Escherichia coli O157:H7", "scientific_name": "Escherichia coli O157:H7", "code": "ECOL", "risk_level": critical_risk, "description": "Shiga toxin-producing E. coli (STEC)"},
+    {"name": "Listeria monocytogenes", "scientific_name": "Listeria monocytogenes", "code": "LIST", "risk_level": critical_risk, "description": "Causes listeriosis; survives refrigeration"},
+    {"name": "Campylobacter jejuni", "scientific_name": "Campylobacter jejuni", "code": "CAMP", "risk_level": high_risk, "description": "Leading cause of bacterial gastroenteritis"},
+    {"name": "Staphylococcus aureus", "scientific_name": "Staphylococcus aureus", "code": "STAU", "risk_level": high_risk, "description": "Produces heat-stable enterotoxins"},
+    {"name": "Clostridium botulinum", "scientific_name": "Clostridium botulinum", "code": "CBOT", "risk_level": critical_risk, "description": "Produces botulinum neurotoxin; canned food risk"},
+    {"name": "Clostridium perfringens", "scientific_name": "Clostridium perfringens", "code": "CPER", "risk_level": medium_risk, "description": "Associated with improperly cooked meats"},
+    {"name": "Bacillus cereus", "scientific_name": "Bacillus cereus", "code": "BCER", "risk_level": medium_risk, "description": "Causes emetic and diarrheal food poisoning"},
+    {"name": "Vibrio cholerae", "scientific_name": "Vibrio cholerae", "code": "VCHO", "risk_level": critical_risk, "description": "Causes cholera; water and seafood contamination"},
+    {"name": "Vibrio parahaemolyticus", "scientific_name": "Vibrio parahaemolyticus", "code": "VPAR", "risk_level": high_risk, "description": "Seafood-associated gastroenteritis"},
+    {"name": "Shigella flexneri", "scientific_name": "Shigella flexneri", "code": "SHIG", "risk_level": high_risk, "description": "Causes shigellosis (bacillary dysentery)"},
+    {"name": "Yersinia enterocolitica", "scientific_name": "Yersinia enterocolitica", "code": "YENT", "risk_level": medium_risk, "description": "Associated with pork products"},
+    {"name": "Cronobacter sakazakii", "scientific_name": "Cronobacter sakazakii", "code": "CSAK", "risk_level": critical_risk, "description": "Infant formula contamination risk"},
+    {"name": "Norovirus", "scientific_name": "Norovirus", "code": "NORO", "risk_level": high_risk, "description": "Most common viral foodborne pathogen"},
+    {"name": "Hepatitis A Virus", "scientific_name": "Hepatitis A virus", "code": "HEPA", "risk_level": high_risk, "description": "Foodborne viral hepatitis"},
+]
+for m in microbe_data:
+    obj, created = Microorganism.objects.get_or_create(code=m["code"], defaults=m)
+    print(f"  {'Created' if created else 'Exists'}: {obj.name}")
+
+print("\n=== Seeding ALL 24 Feature Flags ===")
+flags_data = [
+    # Modules
+    {"key": "module.batches", "label": "Batch Management", "group": "Modules", "description": "Group samples by production batch for traceability.", "enabled": True},
+    {"key": "module.dna_extraction", "label": "DNA Extraction", "group": "Modules", "description": "Log DNA extraction runs with concentration and purity.", "enabled": True},
+    {"key": "module.pcr", "label": "PCR / qPCR Tests", "group": "Modules", "description": "Register and record PCR and qPCR test results.", "enabled": True},
+    {"key": "module.qpcr", "label": "qPCR (alias)", "group": "Modules", "description": "Alias for PCR module.", "enabled": True},
+    {"key": "module.sequencing", "label": "Sequencing", "group": "Modules", "description": "Sanger, 16S, WGS sequencing workflows.", "enabled": True},
+    {"key": "module.microorganism_id", "label": "Microorganism Identification", "group": "Modules", "description": "Pathogen catalog and identification matching.", "enabled": True},
+    {"key": "module.qc_approval", "label": "QC Approval", "group": "Modules", "description": "Four-eyes QC review and food-safety classification.", "enabled": True},
+    {"key": "module.reports", "label": "Report Generation", "group": "Modules", "description": "Generate and send food-safety PDF reports.", "enabled": True},
+    {"key": "module.reminders", "label": "Reminders", "group": "Modules", "description": "Deadline reminders and SLA tracking.", "enabled": True},
+    {"key": "module.notifications", "label": "Notifications", "group": "Modules", "description": "In-app notification bell and digest emails.", "enabled": True},
+    {"key": "module.audit_export", "label": "Audit Export", "group": "Modules", "description": "Export the cryptographic audit trail.", "enabled": True},
+    {"key": "module.barcode_qr", "label": "Barcode / QR Codes", "group": "Modules", "description": "Generate and scan sample barcodes and QR labels.", "enabled": True},
+    # UI
+    {"key": "ui.live_search", "label": "Live Search", "group": "UI", "description": "HTMX-powered type-ahead on SmartSelect fields.", "enabled": True},
+    {"key": "ui.modals", "label": "Popup Modals", "group": "UI", "description": "Open create/edit forms in popup modals instead of full pages.", "enabled": True},
+    {"key": "ui.dark_mode", "label": "Dark Mode", "group": "UI", "description": "Allow users to toggle dark theme.", "enabled": True},
+    {"key": "ui.animations", "label": "Animations", "group": "UI", "description": "CSS transitions and micro-animations.", "enabled": True},
+    {"key": "ui.keyboard_shortcuts", "label": "Keyboard Shortcuts", "group": "UI", "description": "Global keyboard shortcuts (Ctrl+K search, etc.).", "enabled": True},
+    {"key": "ui.simple_mode", "label": "Simple Mode (Easy)", "group": "UI", "description": "Hide advanced fields (Ct, purity, sequence data) for quick entry.", "enabled": False},
+    # Security
+    {"key": "sec.two_factor", "label": "Two-Factor Auth", "group": "Security", "description": "TOTP two-factor authentication for configured roles.", "enabled": True},
+    {"key": "sec.ip_allowlist", "label": "IP Allowlist", "group": "Security", "description": "Restrict access to approved IP ranges.", "enabled": False},
+    {"key": "sec.force_password_expiry", "label": "Password Expiry", "group": "Security", "description": "Force password change every N days.", "enabled": True},
+    # Integrations
+    {"key": "integ.email", "label": "Email Integration", "group": "Integrations", "description": "Send reports and digests via email.", "enabled": True},
+    {"key": "integ.sms", "label": "SMS Integration", "group": "Integrations", "description": "Send SMS reminders and alerts.", "enabled": False},
+    {"key": "integ.ilims_api", "label": "ILIMS Core API", "group": "Integrations", "description": "Cross-portal API for shared ILIMS data.", "enabled": False},
+]
+for f in flags_data:
+    obj, created = FeatureFlag.objects.get_or_create(
+        key=f["key"],
+        defaults={
+            "label": f["label"],
+            "group": f["group"],
+            "description": f["description"],
+            "enabled": f["enabled"],
+            "is_core": False,
+        },
+    )
+    print(f"  {'Created' if created else 'Exists'}: {obj.key} ({'ON' if obj.enabled else 'OFF'})")
+
+print("\n=== Seeding Test Users (all 5 roles) ===")
+users_data = [
+    {"email": "tech@ilims.lk", "username": "technician", "first_name": "Kamal", "last_name": "Perera", "role": "TECHNICIAN"},
+    {"email": "analyst@ilims.lk", "username": "analyst", "first_name": "Nimal", "last_name": "Silva", "role": "ANALYST"},
+    {"email": "qc@ilims.lk", "username": "qc_officer", "first_name": "Sara", "last_name": "Fernando", "role": "QC_OFFICER"},
+    {"email": "officer@ilims.lk", "username": "safety_officer", "first_name": "Ruwan", "last_name": "Jayawardena", "role": "FOOD_SAFETY_OFFICER"},
+    {"email": "admin@ilims.lk", "username": "admin", "first_name": "Admin", "last_name": "ILIMS", "role": "ADMIN"},
+]
+for u in users_data:
+    if not User.objects.filter(email=u["email"]).exists():
+        user = User.objects.create_user(
+            email=u["email"],
+            username=u["username"],
+            password="Test@12345678",
+            first_name=u["first_name"],
+            last_name=u["last_name"],
+            role=u["role"],
+        )
+        if u["role"] == "ADMIN":
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+        print(f"  Created: {u['username']} ({u['role']}) — password: Test@12345678")
+    else:
+        print(f"  Exists: {u['username']}")
+
+print("\n✅ All seed data loaded successfully!")
+
+
+*/15 * * * * cd /path/to/ilims && /path/to/venv/bin/python manage.py run_reminders >> /path/to/logs/cron.log 2>&1
+

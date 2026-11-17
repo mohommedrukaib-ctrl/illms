@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Documentation — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "report" "24" %}</div>
+        <div class="page-header__text">
+            <h1>ILIMS Portal Documentation</h1>
+            <p>Complete feature guide for the Food Safety Molecular Analysis Portal</p>
+        </div>
+    </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="card mb-lg">
+    <div class="card__header"><div class="card__title">Table of Contents</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div>
+                <div class="text-xs text-uppercase text-muted mb-sm">Getting Started</div>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li><a href="#login">Login & Authentication</a></li>
+                    <li><a href="#dashboard">Dashboard Overview</a></li>
+                    <li><a href="#navigation">Sidebar Navigation</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="text-xs text-uppercase text-muted mb-sm">Core Workflow</div>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li><a href="#clients">Client Management</a></li>
+                    <li><a href="#samples">Sample Registration</a></li>
+                    <li><a href="#dna">DNA Extraction</a></li>
+                    <li><a href="#tests">Molecular Tests</a></li>
+                    <li><a href="#microbes">Microorganism Catalog</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="text-xs text-uppercase text-muted mb-sm">Quality & Reports</div>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li><a href="#qc">QC Queue & Approval</a></li>
+                    <li><a href="#reports">Reports & PDF</a></li>
+                    <li><a href="#reminders">Reminders & Alerts</a></li>
+                    <li><a href="#audit">Audit Trail</a></li>
+                    <li><a href="#settings">Settings Hub</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 1. LOGIN -->
+<div class="card mb-lg" id="login">
+    <div class="card__header"><div class="card__title">1. Login & Authentication</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-lg" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 class="text-lg mb-sm">How to Log In</h3>
+                <ol style="padding-left:1.2rem; line-height:2;">
+                    <li>Go to <code>http://127.0.0.1:8000/accounts/login/</code></li>
+                    <li>Enter your <strong>email</strong> or <strong>username</strong></li>
+                    <li>Enter your password (min 12 chars)</li>
+                    <li>Click <strong>Sign In</strong></li>
+                    <li>If you have 2FA enabled, enter your 6-digit TOTP code</li>
+                </ol>
+                <div class="message message--info mt-md">
+                    <strong>Default Admin:</strong> admin@ilims.lk / Test@12345678
+                </div>
+            </div>
+            <div>
+                <h3 class="text-lg mb-sm">Security Features</h3>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li><span class="pill pill--ok">Argon2id</span> Password hashing</li>
+                    <li><span class="pill pill--warn">5 attempts</span> Brute-force lockout (15 min)</li>
+                    <li><span class="pill pill--info">12 chars</span> Minimum password length</li>
+                    <li><span class="pill pill--brand">History</span> Last 5 passwords blocked</li>
+                    <li><span class="pill pill--danger">Idle</span> Auto-logout after 30 min</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. DASHBOARD -->
+<div class="card mb-lg" id="dashboard">
+    <div class="card__header"><div class="card__title">2. Dashboard Overview</div></div>
+    <div class="card__body">
+        <p class="mb-md">The dashboard (<code>/</code>) is your command center. It shows real-time KPIs, charts, and action items.</p>
+        <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+            <div class="p-md border rounded text-center">
+                <div class="text-2xl text-bold text-brand">KPI Cards</div>
+                <div class="text-sm text-muted mt-xs">Active samples, tests this month, clients, testing count</div>
+            </div>
+            <div class="p-md border rounded text-center">
+                <div class="text-2xl text-bold text-brand">SVG Chart</div>
+                <div class="text-sm text-muted mt-xs">6-month sample intake throughput bar chart</div>
+            </div>
+            <div class="p-md border rounded text-center">
+                <div class="text-2xl text-bold text-brand">Pathogens</div>
+                <div class="text-sm text-muted mt-xs">Top detected microorganisms with % bars</div>
+            </div>
+            <div class="p-md border rounded text-center">
+                <div class="text-2xl text-bold text-brand">Side Cards</div>
+                <div class="text-sm text-muted mt-xs">Today's deadlines, overdue samples, alerts</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. NAVIGATION -->
+<div class="card mb-lg" id="navigation">
+    <div class="card__header"><div class="card__title">3. Sidebar Navigation</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <table class="table">
+                    <thead><tr><th>Group</th><th>Links</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>LABORATORY</strong></td><td>Dashboard, Samples, Batches, Clients</td></tr>
+                        <tr><td><strong>MOLECULAR</strong></td><td>DNA Extraction, PCR/qPCR Tests, Microorganisms</td></tr>
+                        <tr><td><strong>QUALITY</strong></td><td>QC Queue</td></tr>
+                        <tr><td><strong>REPORTS</strong></td><td>Reports</td></tr>
+                        <tr><td><strong>RECORDS</strong></td><td>Reminders, Notifications, Audit Trail</td></tr>
+                        <tr><td><strong>SYSTEM</strong></td><td>Settings, Users</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 class="text-lg mb-sm">Topbar Actions</h3>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li>🔍 <strong>Global Search</strong> — Find any page</li>
+                    <li>🖨️ <strong>Print</strong> — Print current page</li>
+                    <li>🌙 <strong>Theme Toggle</strong> — Light / Dark mode</li>
+                    <li>⚙️ <strong>Settings</strong> — Quick link to Settings Hub</li>
+                    <li>🔔 <strong>Bell</strong> — Unread notification count (polls every 45s)</li>
+                    <li>👤 <strong>Avatar</strong> — Profile link with initials</li>
+                    <li>🚪 <strong>Logout</strong> — Sign out</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. CLIENTS -->
+<div class="card mb-lg" id="clients">
+    <div class="card__header"><div class="card__title">4. Client Management</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/clients/</code></p>
+        <div class="d-grid gap-lg" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 class="text-lg mb-sm">How to Add a Client</h3>
+                <ol style="padding-left:1.2rem; line-height:2;">
+                    <li>Click <span class="pill pill--brand">+ Add Client</span> in the top right</li>
+                    <li>A popup modal opens (or full page if JS is off)</li>
+                    <li>Type the client name (e.g., "Keells Foods")</li>
+                    <li>Fill in contact person, email, phone</li>
+                    <li>Type a country name → results appear as you type</li>
+                    <li>Click <strong>Save Client</strong></li>
+                </ol>
+            </div>
+            <div>
+                <h3 class="text-lg mb-sm">Features</h3>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li>✅ SmartSelect type-ahead for Country & Region</li>
+                    <li>✅ Auto-generated client code (e.g., CUS-LK-WP-2026-00001)</li>
+                    <li>✅ Phone uniqueness validation</li>
+                    <li>✅ Live search filter on the list</li>
+                    <li>✅ Edit button (gear icon) on each row</li>
+                    <li>✅ Soft delete (X icon) — blocked if samples exist</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. SAMPLES -->
+<div class="card mb-lg" id="samples">
+    <div class="card__header"><div class="card__title">5. Sample Registration & Workflow</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/samples/</code> → <code>/samples/create/</code> → <code>/samples/&lt;id&gt;/</code></p>
+
+        <h3 class="text-lg mb-sm">Registration Steps</h3>
+        <ol style="padding-left:1.2rem; line-height:2;" class="mb-md">
+            <li>Click <span class="pill pill--brand">+ Register Sample</span></li>
+            <li>Type or select a <strong>Client</strong> (SmartSelect)</li>
+            <li>Enter <strong>Product Name</strong> (e.g., "Chicken Sausages")</li>
+            <li>Select <strong>Category</strong> → <strong>Product Type</strong> auto-unlocks</li>
+            <li>Choose <strong>Molecular Type</strong>: DNA Extraction / PCR-qPCR / Sequencing</li>
+            <li>Select <strong>Requested Test Method</strong> (auto-filtered by molecular type)</li>
+            <li>Set <strong>Priority</strong>, <strong>Storage</strong>, <strong>Due Date</strong></li>
+            <li>Click <strong>Register Sample</strong> → code auto-generated (e.g., FS-LK-WP-2026-00042)</li>
+        </ol>
+
+        <h3 class="text-lg mb-sm">Workflow State Machine</h3>
+        <div class="p-md border rounded bg-card-hover mb-md">
+            <code class="text-mono text-sm">
+                Sample Received → Testing in Progress → Analysis → Report Preparation → Report Ready → Report Sent
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↘ Rejected
+            </code>
+        </div>
+
+        <h3 class="text-lg mb-sm">Sample Detail Tabs</h3>
+        <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+            <div class="p-sm border rounded text-center"><strong>Overview</strong><div class="text-xs text-muted">Metadata & status</div></div>
+            <div class="p-sm border rounded text-center"><strong>Molecular</strong><div class="text-xs text-muted">DNA, PCR, Seq</div></div>
+            <div class="p-sm border rounded text-center"><strong>Timeline</strong><div class="text-xs text-muted">Event history</div></div>
+            <div class="p-sm border rounded text-center"><strong>Audit</strong><div class="text-xs text-muted">Hash chain log</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 6. DNA -->
+<div class="card mb-lg" id="dna">
+    <div class="card__header"><div class="card__title">6. DNA Extraction</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/dna/</code></p>
+        <ol style="padding-left:1.2rem; line-height:2;">
+            <li>Click <span class="pill pill--brand">+ Log Extraction</span></li>
+            <li>Select the <strong>Sample</strong> (SmartSelect)</li>
+            <li>Choose <strong>Extraction Method</strong> (Spin Column, Magnetic Bead, etc.)</li>
+            <li>Set <strong>Date</strong>, <strong>Kit Name</strong>, <strong>Operator</strong></li>
+            <li>Optional: Concentration, A260/280, A260/230, Volume</li>
+            <li>Click <strong>Save</strong> → auto-advances sample to "Testing"</li>
+        </ol>
+    </div>
+</div>
+
+<!-- 7. TESTS -->
+<div class="card mb-lg" id="tests">
+    <div class="card__header"><div class="card__title">7. Molecular Tests (PCR / qPCR / Sequencing)</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/tests/</code></p>
+        <ol style="padding-left:1.2rem; line-height:2;">
+            <li>Click <span class="pill pill--brand">+ Register Test</span></li>
+            <li>Select <strong>Sample</strong> and <strong>Test Type</strong></li>
+            <li>Choose <strong>Primary Target</strong> from microorganism catalog</li>
+            <li>Fill in <strong>Run Date</strong>, <strong>Instrument</strong>, <strong>Operator</strong></li>
+            <li>Add <strong>Result Lines</strong>: organism + detection + Ct value</li>
+            <li>Click <strong>Save</strong> → auto-creates a QC record for review</li>
+        </ol>
+    </div>
+</div>
+
+<!-- 8. MICROBES -->
+<div class="card mb-lg" id="microbes">
+    <div class="card__header"><div class="card__title">8. Microorganism Catalog</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/microorganisms/</code></p>
+        <p>Pre-seeded with 15 foodborne pathogens. Each has a name, scientific name, code, risk level, and category.</p>
+        <div class="d-grid gap-sm mt-md" style="grid-template-columns: repeat(5, 1fr);">
+            <span class="pill pill--danger">Salmonella</span>
+            <span class="pill pill--danger">E. coli O157</span>
+            <span class="pill pill--danger">Listeria</span>
+            <span class="pill pill--warn">Campylobacter</span>
+            <span class="pill pill--warn">Norovirus</span>
+        </div>
+    </div>
+</div>
+
+<!-- 9. QC -->
+<div class="card mb-lg" id="qc">
+    <div class="card__header"><div class="card__title">9. QC Queue & Four-Eyes Approval</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/qc/</code></p>
+        <div class="message message--warning mb-md">
+            <strong>Four-Eyes Rule:</strong> The technician who ran the test CANNOT approve their own QC record. A different QC officer must review it.
+        </div>
+        <ol style="padding-left:1.2rem; line-height:2;">
+            <li>Go to <code>/qc/</code> — see all pending reviews</li>
+            <li>Click <span class="pill pill--brand">Review</span> on a pending item</li>
+            <li>See the full test context: sample, operator, result lines, Ct values</li>
+            <li>Choose <strong>Decision</strong>: Approved / Rejected / Rework</li>
+            <li>Choose <strong>Safety Classification</strong>: Safe / Unsafe / Needs Review</li>
+            <li>Add <strong>Notes</strong> (required for Rejected/Rework)</li>
+            <li>Click <strong>Save Review</strong> → sample auto-advances to next state</li>
+        </ol>
+    </div>
+</div>
+
+<!-- 10. REPORTS -->
+<div class="card mb-lg" id="reports">
+    <div class="card__header"><div class="card__title">10. Reports & PDF Generation</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/reports/</code></p>
+        <ol style="padding-left:1.2rem; line-height:2;">
+            <li>Open a sample in "Report Preparation" state</li>
+            <li>Click <span class="pill pill--brand">Generate Report</span></li>
+            <li>Select <strong>Safety Classification</strong></li>
+            <li>Click <strong>Generate PDF</strong> → downloads a branded A4 report</li>
+            <li>Go to <code>/reports/&lt;id&gt;/</code> to view, download, or send</li>
+        </ol>
+        <h3 class="text-lg mt-md mb-sm">6 Report Deliverables</h3>
+        <table class="table">
+            <thead><tr><th>#</th><th>Deliverable</th><th>URL</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td>Food Safety Report (PDF)</td><td><code>/reports/&lt;id&gt;/download/</code></td></tr>
+                <tr><td>2</td><td>Molecular Test Summary</td><td><code>/reports/&lt;id&gt;/</code></td></tr>
+                <tr><td>3</td><td>Microorganism Detection Log</td><td><code>/reports/detections/</code></td></tr>
+                <tr><td>4</td><td>Batch Traceability</td><td>Sample detail → batch link</td></tr>
+                <tr><td>5</td><td>QC Compliance Log</td><td><code>/reports/qc-compliance/</code></td></tr>
+                <tr><td>6</td><td>Audit Trail Export (CSV)</td><td><code>/reports/audit-export/</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 11. REMINDERS -->
+<div class="card mb-lg" id="reminders">
+    <div class="card__header"><div class="card__title">11. Reminders & Notifications</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-lg" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 class="text-lg mb-sm">Reminders (<code>/reminders/</code>)</h3>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li>Auto-created by cron every 15 minutes</li>
+                    <li>Types: Due Soon, Due Today, Overdue, QC Pending</li>
+                    <li>Actions: Done, Snooze 1d/3d, Open, Reassign</li>
+                    <li>Tabs: Today | Upcoming | Overdue | Priority | Done</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg mb-sm">Notifications (<code>/notifications/</code>)</h3>
+                <ul style="padding-left:1.2rem; line-height:2;">
+                    <li>Topbar bell polls every 45 seconds</li>
+                    <li>Created by state changes, QC decisions, reminders</li>
+                    <li>Mark individual or all as read</li>
+                    <li>JS-off fallback: full notification page</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 12. AUDIT -->
+<div class="card mb-lg" id="audit">
+    <div class="card__header"><div class="card__title">12. Cryptographic Audit Trail</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/audit/</code></p>
+        <ul style="padding-left:1.2rem; line-height:2;">
+            <li>Every CREATE, UPDATE, APPROVE, STATUS_CHANGE, EXPORT is logged</li>
+            <li>Each record has a <strong>SHA-256 hash</strong> chained to the previous record</li>
+            <li>Click <strong>Inspect</strong> to see full diff and hash chain</li>
+            <li>Click <strong>Verify Hash Chain</strong> to prove no tampering</li>
+            <li>Click <strong>Export CSV</strong> to download the full audit log</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 13. SETTINGS -->
+<div class="card mb-lg" id="settings">
+    <div class="card__header"><div class="card__title">13. Settings Hub (Admin Only)</div></div>
+    <div class="card__body">
+        <p class="mb-md"><strong>URL:</strong> <code>/settings/</code></p>
+        <table class="table">
+            <thead><tr><th>Tab</th><th>What It Controls</th></tr></thead>
+            <tbody>
+                <tr><td><strong>General</strong></td><td>Organization name, code prefixes, separator, padding, SLA days</td></tr>
+                <tr><td><strong>Features</strong></td><td>Toggle 24 feature flags on/off (modules, UI, security, integrations)</td></tr>
+                <tr><td><strong>Countries</strong></td><td>Add/manage countries with ISO codes, currencies, timezones</td></tr>
+                <tr><td><strong>Regions</strong></td><td>Add/manage provinces/states per country</td></tr>
+                <tr><td><strong>Laboratories</strong></td><td>Register lab facilities with codes and addresses</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- QUICK REFERENCE -->
+<div class="card mb-lg">
+    <div class="card__header"><div class="card__title">Quick Reference — All URLs</div></div>
+    <div class="card__body">
+        <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
+            <table class="table">
+                <thead><tr><th>Page</th><th>URL</th></tr></thead>
+                <tbody>
+                    <tr><td>Login</td><td><code>/accounts/login/</code></td></tr>
+                    <tr><td>Dashboard</td><td><code>/</code></td></tr>
+                    <tr><td>Samples</td><td><code>/samples/</code></td></tr>
+                    <tr><td>Clients</td><td><code>/clients/</code></td></tr>
+                    <tr><td>DNA Extractions</td><td><code>/dna/</code></td></tr>
+                    <tr><td>Molecular Tests</td><td><code>/tests/</code></td></tr>
+                    <tr><td>Microorganisms</td><td><code>/microorganisms/</code></td></tr>
+                </tbody>
+            </table>
+            <table class="table">
+                <thead><tr><th>Page</th><th>URL</th></tr></thead>
+                <tbody>
+                    <tr><td>QC Queue</td><td><code>/qc/</code></td></tr>
+                    <tr><td>Reports</td><td><code>/reports/</code></td></tr>
+                    <tr><td>Reminders</td><td><code>/reminders/</code></td></tr>
+                    <tr><td>Notifications</td><td><code>/notifications/</code></td></tr>
+                    <tr><td>Audit Trail</td><td><code>/audit/</code></td></tr>
+                    <tr><td>Settings</td><td><code>/settings/</code></td></tr>
+                    <tr><td>Profile</td><td><code>/accounts/profile/</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,16 @@
 {% load ilims_tags %}
 <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+
     <div class="modal modal--xl" role="document">
         <div class="modal__header">
             <h2 class="modal__title">{{ modal_title|default:"Register Product / Sample" }}</h2>
             <button type="button" class="modal__close" onclick="document.getElementById('modal-host').innerHTML=''">
+=======
+    <div class="modal modal--lg" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title|default:"Register Product / Sample" }}</h2>
+            <button type="button" class="modal__close" data-close-modal>
+
                 {% icon "close" "20" %}
             </button>
         </div>
@@ -14,19 +21,34 @@
               hx-swap="innerHTML">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next_url }}">
+
             <input type="hidden" name="return_to" value="{{ return_to|default:'' }}">
+=======
+            {% if edit_pk %}<input type="hidden" name="edit" value="{{ edit_pk }}">{% endif %}
+
 
             <div class="modal__body">
                 {% if form.errors %}
                 <div class="message message--error mb-md" role="alert">
+
                     <strong>Fix the following:</strong>
                     <ul style="margin:6px 0 0 1.1rem;padding:0;">
                         {% for field, errs in form.errors.items %}
                             {% for e in errs %}<li><strong>{{ field }}:</strong> {{ e }}</li>{% endfor %}
+=======
+                    <strong>Please fix the following:</strong>
+                    <ul style="margin:6px 0 0 1.1rem; padding:0;">
+                        {% for field, errs in form.errors.items %}
+                            {% for e in errs %}<li><strong>{{ field|title }}:</strong> {{ e }}</li>{% endfor %}
+
                         {% endfor %}
                     </ul>
                 </div>
                 {% endif %}
+
+
+=======
+                <!-- Client Name & Phone -->
 
                 <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
                     <div class="form-group">
@@ -51,20 +73,31 @@
 
                 <hr class="divider">
 
+
                 <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr;">
                     <div class="form-group">
                         <label class="form-label form-label--required">Product Name</label>
+=======
+                <!-- Product Name, Category & Product Type -->
+                <div class="d-grid gap-md" style="grid-template-columns:1.2fr 1fr 1fr;">
+                    <div class="form-group">
+                        <label class="form-label form-label--required">Product / Specimen Name</label>
+
                         {{ form.product_name }}
                         {% if form.product_name.errors %}<div class="form-error">{{ form.product_name.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="form-group">
                         <label class="form-label">Category</label>
                         {{ form.product_category }}
+
                         <div class="form-hint">Select or type a new category.</div>
+=======
+
                     </div>
                     <div class="form-group">
                         <label class="form-label" id="type-label">Product Type</label>
                         {{ form.product_type }}
+
                         <div class="form-hint" id="type-hint">Select category first.</div>
                     </div>
                 </div>
@@ -84,11 +117,27 @@
                         <div class="form-hint" id="test-hint">Select molecular type first.</div>
                         {% if form.requested_test.errors %}<div class="form-error">{{ form.requested_test.errors.0 }}</div>{% endif %}
                     </div>
+=======
+                    </div>
+                </div>
+
+                <!-- Requested Test Input (Auto-Uppercase + Instant Add) -->
+                <div class="form-group">
+                    <label class="form-label form-label--required">Requested Diagnostic / Laboratory Test</label>
+                    {{ form.requested_test }}
+                    <div class="form-hint">{{ form.requested_test.help_text }}</div>
+                    {% if form.requested_test.errors %}<div class="form-error">{{ form.requested_test.errors.0 }}</div>{% endif %}
+
                 </div>
 
                 <hr class="divider">
 
+
                 <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr;">
+=======
+                <!-- Dates & Priority -->
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+
                     <div class="form-group">
                         <label class="form-label form-label--required">Received Date</label>
                         {{ form.received_date }}
@@ -101,6 +150,7 @@
                         <label class="form-label">Priority</label>
                         {{ form.priority }}
                     </div>
+
                 </div>
 
                 <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
@@ -119,11 +169,31 @@
 
                 <div class="form-group">
                     <label class="form-label">Remarks</label>
+=======
+                    <div class="form-group">
+                        <label class="form-label">Storage</label>
+                        {{ form.storage_condition }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                    {% if form.assigned_to %}
+                    <div class="form-group"><label class="form-label">Assigned Technician</label>{{ form.assigned_to }}</div>
+                    {% endif %}
+                    {% if form.laboratory %}
+                    <div class="form-group"><label class="form-label">Laboratory Facility</label>{{ form.laboratory }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Remarks / Notes</label>
+
                     {{ form.remarks }}
                 </div>
             </div>
 
             <div class="modal__footer">
+
                 <button type="button" class="btn btn--secondary"
                         onclick="document.getElementById('modal-host').innerHTML=''">Cancel</button>
                 <button type="submit" class="btn btn--primary">
@@ -133,6 +203,11 @@
                     {% else %}
                         Register Sample
                     {% endif %}
+=======
+                <button type="button" class="btn btn--secondary" data-close-modal>Cancel</button>
+                <button type="submit" class="btn btn--primary">
+                    {% icon "check" "18" %} {% if edit_pk %}Save Changes{% else %}Register Sample{% endif %}
+
                 </button>
             </div>
         </form>
@@ -171,18 +246,27 @@
     function unlockProductType() {
         var typeText = document.getElementById("id_product_type__text");
         var typePk = document.getElementById("id_product_type");
+
         var hint = document.getElementById("type-hint");
+=======
+
         var catText = document.getElementById("id_product_category__text");
         var catPk = document.getElementById("id_product_category");
         var catVal = (catText && catText.value.trim()) || (catPk && catPk.value.trim());
 
         if (catVal) {
             if (typeText) typeText.disabled = false;
+
             if (hint) hint.textContent = "Select or type a product type.";
         } else {
             if (typeText) { typeText.disabled = true; typeText.value = ""; }
             if (typePk) typePk.value = "";
             if (hint) hint.textContent = "Select category first.";
+=======
+        } else {
+            if (typeText) { typeText.disabled = true; typeText.value = ""; }
+            if (typePk) typePk.value = "";
+
         }
     }
 
@@ -191,6 +275,7 @@
     if (catTextEl) catTextEl.addEventListener("input", unlockProductType);
     if (catPkEl) catPkEl.addEventListener("change", unlockProductType);
     unlockProductType();
+
 
     // Cascade: Molecular Type unlocks Requested Test + filters by category
     function unlockRequestedTest() {
@@ -237,5 +322,7 @@
             evt.detail.parameters["molecular_type"] = molVal;
         }
     });
+=======
+
 })();
 </script>

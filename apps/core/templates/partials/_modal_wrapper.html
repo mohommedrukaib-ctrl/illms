@@ -8,10 +8,14 @@
     <div class="modal {% if modal_size %}modal--{{ modal_size }}{% endif %}" role="document">
         <div class="modal__header">
             <h2 class="modal__title" id="modal-title">{{ modal_title|default:"" }}</h2>
+
             <button type="button"
                     class="modal__close"
                     aria-label="Close modal"
                     onclick="document.getElementById('modal-host').innerHTML='';">
+=======
+            <button type="button" class="modal__close" aria-label="Close modal" data-close-modal>
+
                 {% icon "close" "20" %}
             </button>
         </div>

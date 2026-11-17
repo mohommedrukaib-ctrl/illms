@@ -51,7 +51,10 @@
                     text.value = li.getAttribute("data-display");
                     results.innerHTML = "";
                     text.setAttribute("aria-expanded", "false");
+
                     // Trigger change event so other scripts (like inline client creation) can react
+
+
                     hidden.dispatchEvent(new Event("change", { bubbles: true })); 
                 });
 
@@ -76,7 +79,10 @@
                         results.innerHTML = "";
                         return;
                     } else {
+
                         // Clear hidden PK if user starts typing something new
+
+
                         hidden.value = "";
                         hidden.dispatchEvent(new Event("change", { bubbles: true }));
                         return;
@@ -92,6 +98,7 @@
             })(wrappers[i]);
         }
     }
+
 
     function initModals(root) {
         var overlay = (root || document).querySelector("#modal-host .modal-overlay");
@@ -145,6 +152,62 @@ document.body.addEventListener("htmx:sendError", function () {
     host.appendChild(div);
 }); 
 
+        function initModals(root) {
+        // Backdrop click does NOT close the modal.
+        // Close only via [data-close-modal] button or Escape key.
+        var overlay = (root || document).querySelector("#modal-host .modal-overlay");
+        if (!overlay) return;
+    }
+
+    // Escape key closes any open modal
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        var host = document.getElementById("modal-host");
+        if (host && host.innerHTML.trim()) {
+            host.innerHTML = "";
+        }
+    });
+
+    /*
+     * Modal Close: only when explicit [data-close-modal] is clicked
+     */
+    document.addEventListener("click", function (e) {
+        var closeBtn = e.target.closest("[data-close-modal]");
+        if (closeBtn) {
+            e.preventDefault();
+            var host = document.getElementById("modal-host");
+            if (host) host.innerHTML = "";
+            return;
+        }
+        var printBtn = e.target.closest("[data-action='print']");
+        if (printBtn) {
+            e.preventDefault();
+            window.print();
+        }
+    });
+
+    // Render 400 validation responses inside modal
+    document.body.addEventListener("htmx:beforeSwap", function (evt) {
+        var status = evt.detail.xhr.status;
+        if (status === 400 || status === 422) {
+            evt.detail.shouldSwap = true;
+            evt.detail.isError = false;
+        }
+    });
+
+    document.body.addEventListener("htmx:responseError", function (evt) {
+        var status = evt.detail.xhr.status;
+        var host = document.getElementById("toast-host");
+        if (!host) return;
+        var div = document.createElement("div");
+        div.className = "message message--error";
+        div.setAttribute("role", "alert");
+        div.setAttribute("data-auto-dismiss", "1");
+        div.innerHTML = "<span><strong>Server error " + status + ":</strong> Request failed.</span>";
+        host.appendChild(div);
+    });
+
+
     document.addEventListener("htmx:configRequest", function (e) {
         var csrfInput = document.querySelector("[name=csrfmiddlewaretoken]");
         if (csrfInput) e.detail.headers["X-CSRFToken"] = csrfInput.value;
@@ -156,6 +219,7 @@ document.body.addEventListener("htmx:sendError", function () {
         initModals(document);
     });
 
+
     
 
     document.body.addEventListener("htmx:beforeSwap", function (evt) {
@@ -164,6 +228,29 @@ document.body.addEventListener("htmx:sendError", function () {
         evt.detail.isError = false;
     }
 });
+
+    /*
+     * Modal Close: Only closes when explicit [data-close-modal] is clicked
+     */
+    document.addEventListener("click", function (e) {
+        var closeBtn = e.target.closest("[data-close-modal]");
+        if (closeBtn) {
+            e.preventDefault();
+            var host = document.getElementById("modal-host");
+            if (host) host.innerHTML = "";
+            return;
+        }
+        var printBtn = e.target.closest("[data-action='print']");
+        if (printBtn) {
+            e.preventDefault();
+            window.print();
+        }
+    });
+
+    document.body.addEventListener("ilims:refresh", function () {
+        window.location.reload();
+    });
+
 
     function init() {
         initAutoDismiss(document);

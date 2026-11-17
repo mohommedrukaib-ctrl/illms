@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Reminders — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "reminder" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card stat-card--danger">
+        <div class="stat-card__icon">{% icon "reminder" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Due Today</div>
+            <div class="stat-card__value">{{ counts.today }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">{% icon "chevron-right" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Upcoming (7 days)</div>
+            <div class="stat-card__value">{{ counts.upcoming }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--danger">
+        <div class="stat-card__icon">{% icon "close" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Overdue</div>
+            <div class="stat-card__value">{{ counts.overdue }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">{% icon "qc" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">High Priority</div>
+            <div class="stat-card__value">{{ counts.priority }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="?tab=today" class="tab {% if active_tab == 'today' %}active{% endif %}">Today</a>
+    <a href="?tab=upcoming" class="tab {% if active_tab == 'upcoming' %}active{% endif %}">Upcoming</a>
+    <a href="?tab=overdue" class="tab {% if active_tab == 'overdue' %}active{% endif %}">Overdue</a>
+    <a href="?tab=priority" class="tab {% if active_tab == 'priority' %}active{% endif %}">Priority</a>
+    <a href="?tab=done" class="tab {% if active_tab == 'done' %}active{% endif %}">Done</a>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Priority</th>
+                    <th>Title</th>
+                    <th>Sample</th>
+                    <th>Due Date</th>
+                    <th>Assigned</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reminder-tbody">
+                {% include "reminders/partials/_reminder_rows.html" %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

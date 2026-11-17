@@ -1,0 +1,69 @@
+{% load ilims_tags %}
+<div class="bell-dropdown-wrapper" style="position:relative;display:inline-flex;align-items:center;">
+    <button type="button"
+            class="topbar__btn"
+            aria-label="Notifications"
+            title="Notifications"
+            onclick="this.closest('.bell-dropdown-wrapper').classList.toggle('is-open')">
+        {% icon "bell" "20" %}
+        {% if unread_count %}
+        <span class="topbar__badge">{{ unread_count }}</span>
+        {% endif %}
+    </button>
+
+    <div class="bell-dropdown__panel"
+         style="display:none;position:absolute;right:0;top:calc(100% + 6px);width:320px;max-width:90vw;z-index:2000;background:var(--bg-card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:hidden;">
+        <div style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border,#e5e7eb);">
+            <strong>Notifications</strong>
+            {% if unread_count %}
+            <form method="post"
+                  action="{% url 'core:notification_mark_read' %}"
+                  hx-post="{% url 'core:notification_mark_read' %}"
+                  hx-target="#bell-container"
+                  hx-swap="innerHTML"
+                  style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--ghost btn--sm" style="font-size:12px;">Clear all</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if latest %}
+            {% for n in latest %}
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border,#f1f5f9);{% if not n.is_read %}background:var(--bg-body,#f8fafc);{% endif %}">
+                <a href="{{ n.url|default:'#' }}" style="color:inherit;text-decoration:none;display:block;">
+                    <div style="font-weight:{% if not n.is_read %}600{% else %}500{% endif %};font-size:13px;">
+                        {{ n.title|truncatechars:70 }}
+                    </div>
+                    {% if n.message %}
+                    <div class="text-muted" style="font-size:12px;margin-top:2px;">{{ n.message|truncatechars:90 }}</div>
+                    {% endif %}
+                    <div class="text-muted" style="font-size:11px;margin-top:4px;">{{ n.created_at|timesince }} ago</div>
+                </a>
+                {% if not n.is_read %}
+                <form method="post"
+                      action="{% url 'core:notification_mark_read' %}"
+                      hx-post="{% url 'core:notification_mark_read' %}"
+                      hx-target="#bell-container"
+                      hx-swap="innerHTML"
+                      style="margin-top:6px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" value="{{ n.pk }}">
+                    <button type="submit" class="btn btn--ghost btn--sm" style="font-size:11px;color:var(--ok,#16a34a);">Clear</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="padding:18px;text-align:center;color:#94a3b8;font-size:13px;">No notifications yet.</div>
+        {% endif %}
+
+        <a href="{% url 'core:notifications_list' %}"
+           style="display:block;padding:10px;text-align:center;font-size:13px;border-top:1px solid var(--border,#e5e7eb);">
+            View all →
+        </a>
+    </div>
+</div>
+<style>
+.bell-dropdown-wrapper.is-open .bell-dropdown__panel { display:block !important; }
+</style>

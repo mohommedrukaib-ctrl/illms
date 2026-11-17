@@ -1,0 +1,68 @@
+{% load ilims_tags %}
+{% if samples %}
+    {% for s in samples %}
+    <tr>
+        {# 1. Sample ID #}
+        <td>
+            <a href="{% url 'core:labtest_detail' s.pk %}" class="text-brand text-bold">
+                <code class="text-mono">{{ s.code }}</code>
+            </a>
+        </td>
+
+        {# 2. Client Name #}
+        <td>
+            <strong>{{ s.client.name|default:"—" }}</strong>
+        </td>
+
+        {# 3. Product / Specimen (Merged Product Name + Category & Type) #}
+        <td>
+            <div>{{ s.product_name }}</div>
+            <div class="text-xs">
+                <strong>{{ s.product_category.name|default:"General" }}</strong>
+                {% if s.product_type %}
+                    <span class="text-muted">· {{ s.product_type.name }}</span>
+                {% endif %}
+            </div>
+        </td>
+
+        {# 4. Primary Requested Test #}
+        <td>
+            <span class="pill pill--brand">
+                {{ s.requested_test.name|default:"GENERAL TESTING" }}
+            </span>
+        </td>
+
+        {# 5. Received Date #}
+        <td class="text-muted text-sm">{{ s.received_date|date:"Y-m-d" }}</td>
+
+        {# 6. Stage #}
+        <td>
+            <span class="pill pill--{{ s.state_color }}">{{ s.get_workflow_state_display }}</span>
+        </td>
+
+        {# 7. Test Runs #}
+        <td>
+            <span class="pill pill--info">
+                {{ s.attached_tests.count }} test{{ s.attached_tests.count|pluralize }}
+            </span>
+        </td>
+
+        {# 8. Actions #}
+        <td class="text-right">
+            <a href="{% url 'core:labtest_detail' s.pk %}" class="btn btn--primary btn--sm">
+                {% icon "flask" "14" %} Open Workbench
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="8" class="text-center p-lg text-muted">
+            No active samples found for this stage.
+        </td>
+    </tr>
+{% endif %}
+
+<div id="pagination-wrapper" hx-swap-oob="true">
+    {% include "partials/_pagination.html" %}
+</div>

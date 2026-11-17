@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "batch" "24" %}</div>
+        <div class="page-header__text">
+            <h1><code class="text-mono">{{ batch.code }}</code></h1>
+            <p>Lot {{ batch.batch_number }} · {{ batch.client.name }}</p>
+        </div>
+    </div>
+    <div class="page-header__right d-flex gap-sm">
+        <a href="{% url 'core:batch_create' %}?edit={{ batch.pk }}" class="btn btn--secondary"
+           hx-get="{% url 'core:batch_create' %}?modal=1&edit={{ batch.pk }}"
+           hx-target="#modal-host" hx-swap="innerHTML">{% icon "settings" "18" %} Edit</a>
+        <a href="{% url 'core:batch_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+</div>
+
+<div class="layout-two-col">
+    <div class="card">
+        <div class="card__header"><div class="card__title">Batch Details</div></div>
+        <div class="card__body">
+            <div class="d-grid gap-md" style="grid-template-columns:1fr 1fr;">
+                <div><div class="text-xs text-muted text-uppercase">Lot Number</div><div class="text-semibold">{{ batch.batch_number }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Client</div><div class="text-semibold">{{ batch.client.name }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Product</div><div class="text-semibold">{{ batch.product_name|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Quantity</div><div class="text-semibold">{{ batch.quantity|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Production</div><div class="text-semibold">{{ batch.production_date|date:"d M Y"|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Expiry</div><div class="text-semibold">{{ batch.expiry_date|date:"d M Y"|default:"—" }}</div></div>
+                <div><div class="text-xs text-muted text-uppercase">Storage</div><div class="text-semibold">{{ batch.get_storage_condition_display }}</div></div>
+            </div>
+            {% if batch.notes %}<div class="mt-md p-sm border rounded">{{ batch.notes }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card__header"><div class="card__title">Traceability</div></div>
+        <div class="card__body text-center">
+            <div class="text-2xl text-bold text-brand">{{ batch.sample_count }}</div>
+            <div class="text-sm text-muted">Linked Samples</div>
+        </div>
+    </div>
+</div>
+
+{% if samples %}
+<div class="card mt-md">
+    <div class="card__header"><div class="card__title">Samples in this Batch</div></div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Product</th><th>Received</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for s in samples %}
+            <tr>
+                <td><a href="{% url 'core:sample_detail' s.pk %}" class="text-brand"><code>{{ s.code }}</code></a></td>
+                <td>{{ s.product_name }}</td>
+                <td>{{ s.received_date|date:"Y-m-d" }}</td>
+                <td><span class="pill pill--{{ s.state_color }}">{{ s.get_workflow_state_display }}</span></td>
+                <td><a href="{% url 'core:sample_detail' s.pk %}" class="btn btn--ghost btn--sm">View</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

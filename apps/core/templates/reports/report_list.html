@@ -1,0 +1,53 @@
+    {% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Reports — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "report" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right d-flex gap-sm">
+        <a href="{% url 'core:detection_log' %}" class="btn btn--secondary btn--sm">Detection Log</a>
+        <a href="{% url 'core:qc_compliance_log' %}" class="btn btn--secondary btn--sm">QC Compliance</a>
+        <a href="{% url 'core:audit_export' %}" class="btn btn--secondary btn--sm">Audit Export</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card__header">
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;"
+              hx-get="{% url 'core:reports_list' %}" hx-target="#report-tbody"
+              hx-trigger="keyup delay:400ms from:input" hx-swap="innerHTML">
+            <input type="search" name="q" class="form-input" placeholder="Search report, sample, client…"
+                   value="{{ current_q }}" style="max-width:280px;">
+            <noscript><button type="submit" class="btn btn--secondary">Search</button></noscript>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Report Code</th>
+                    <th>Sample</th>
+                    <th>Client</th>
+                    <th>Safety</th>
+                    <th>Status</th>
+                    <th>Generated</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="report-tbody">
+                {% include "reports/partials/_report_list_rows.html" %}
+            </tbody>
+        </table>
+
+        {% include "partials/_pagination.html" %}   
+    </div>
+</div>
+{% endblock %}

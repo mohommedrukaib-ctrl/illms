@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 
@@ -15,11 +16,14 @@ from apps.core.forms_workflow import AdvanceStatusForm, ClientForm, SampleForm
 from apps.core.mixins import HtmxModalMixin, ILIMSViewMixin
 from apps.core.models import (
     Client, Country, Sample, ProductCategory, ProductType, LabMethod,
-    flag_enabled, next_code,
+    Reminder, flag_enabled, next_code,
 )
+from apps.core.notifications import push_notification, push_to_role, notify_self
+from apps.core.permissions import LaboratoryScopedPermissionMixin
 
 
 def _is_uuid(val) -> bool:
+    """Safely check whether a string is a valid UUID."""
     if not val:
         return False
     try:
@@ -30,8 +34,17 @@ def _is_uuid(val) -> bool:
 
 
 def _full_reload(url: str) -> HttpResponse:
-    response = HttpResponse(status=200)
+    """
+    Return an HTMX redirect with an OOB modal clear and meta-refresh fallback.
+    Guarantees page lists auto-refresh even if HX-Redirect is swallowed.
+    """
+    body = (
+        '<div id="modal-host" hx-swap-oob="innerHTML"></div>'
+        f'<meta http-equiv="refresh" content="0;url={url}">'
+    )
+    response = HttpResponse(body, status=200)
     response["HX-Redirect"] = url
+    response["HX-Trigger"] = "ilims:refresh"
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
@@ -41,6 +54,11 @@ MOLECULAR_TYPE_TO_METHOD_CATEGORY = {
     "PCR_QPCR": "TEST",
     "SEQUENCING": "SEQUENCING",
 }
+
+
+# ══════════════════════════════════════════════════════════════════
+# CLIENTS
+# ══════════════════════════════════════════════════════════════════
 
 
 class ClientListView(ILIMSViewMixin, ListView):
@@ -57,13 +75,17 @@ class ClientListView(ILIMSViewMixin, ListView):
         q = self.request.GET.get("q", "").strip()
         if q:
             qs = qs.filter(
-                Q(name__icontains=q) | Q(code__icontains=q)
-                | Q(email__icontains=q) | Q(phone__icontains=q)
+                Q(name__icontains=q)
+                | Q(code__icontains=q)
+                | Q(email__icontains=q)
+                | Q(phone__icontains=q)
             )
         return qs
 
     def get_template_names(self):
-        if getattr(self.request, "htmx", False) and not getattr(self.request.htmx, "boosted", False):
+        if getattr(self.request, "htmx", False) and not getattr(
+            self.request.htmx, "boosted", False
+        ):
             return ["workflow/partials/_client_list_rows.html"]
         return [self.template_name]
 
@@ -73,20 +95,37 @@ class ClientCreateView(HtmxModalMixin, LoginRequiredMixin, View):
     page_template = "workflow/client_form_page.html"
     modal_title = "Register New Client"
 
+    def _get_instance(self, request):
+        edit_pk = request.GET.get("edit") or request.POST.get("edit")
+        if edit_pk:
+            try:
+                return Client.objects.get(pk=edit_pk, is_deleted=False)
+            except (Client.DoesNotExist, ValueError):
+                pass
+        return None
+
     def get(self, request):
+        instance = self._get_instance(request)
+        title = "Edit Client" if instance else self.modal_title
         next_url = request.GET.get("next", reverse("core:client_list"))
-        form = ClientForm(next_url=next_url)
+
+        form = ClientForm(instance=instance, next_url=next_url, request_get=request.GET)
         return self.render_modal_or_page(request, {
-            "form": form, "next_url": next_url, "modal_title": self.modal_title,
+            "form": form,
+            "next_url": next_url,
+            "modal_title": title,
+            "edit_pk": str(instance.pk) if instance else "",
         })
 
     def post(self, request):
         next_url = request.POST.get("next", reverse("core:client_list"))
-        form = ClientForm(request.POST, next_url=next_url)
+        instance = self._get_instance(request)
+        form = ClientForm(request.POST, instance=instance, next_url=next_url)
 
         if form.is_valid():
             client = form.save(commit=False)
-            client.code = next_code("CLIENT", client.country, client.region)
+            if not instance:
+                client.code = next_code("CLIENT", client.country, client.region)
             try:
                 client.save()
             except Exception as exc:
@@ -99,8 +138,9 @@ class ClientCreateView(HtmxModalMixin, LoginRequiredMixin, View):
                     "form": form, "next_url": next_url, "modal_title": self.modal_title,
                 }, status=400)
 
-            log_audit(request.user, "CREATE", client,
-                      get_changes(None, client, ["name", "code", "email", "phone", "country_id"]))
+            action = "UPDATE" if instance else "CREATE"
+            log_audit(request.user, action, client,
+                      get_changes(instance, client, ["name", "code", "email", "phone", "country_id"]))
 
             if self._is_modal(request):
                 return _full_reload(reverse("core:client_list") + f"?saved={client.code}")
@@ -113,7 +153,12 @@ class ClientCreateView(HtmxModalMixin, LoginRequiredMixin, View):
         }, status=400)
 
 
-class SampleListView(ILIMSViewMixin, ListView):
+# ══════════════════════════════════════════════════════════════════
+# SAMPLES
+# ══════════════════════════════════════════════════════════════════
+
+
+class SampleListView(LaboratoryScopedPermissionMixin, ILIMSViewMixin, ListView):
     model = Sample
     template_name = "workflow/sample_list.html"
     context_object_name = "samples"
@@ -124,12 +169,18 @@ class SampleListView(ILIMSViewMixin, ListView):
 
     def get_queryset(self):
         qs = Sample.objects.filter(is_deleted=False).select_related(
-            "client", "product_category", "product_type", "requested_test", "assigned_to"
+            "client", "product_category", "product_type",
+            "requested_test", "assigned_to",
         )
+        # Apply object-level laboratory scoping based on user role
+        qs = self.scope_queryset(qs, self.request.user, lab_field_path="laboratory")
+
         q = self.request.GET.get("q", "").strip()
         if q:
             qs = qs.filter(
-                Q(code__icontains=q) | Q(product_name__icontains=q) | Q(client__name__icontains=q)
+                Q(code__icontains=q)
+                | Q(product_name__icontains=q)
+                | Q(client__name__icontains=q)
             )
         state = self.request.GET.get("state", "")
         if state:
@@ -144,7 +195,9 @@ class SampleListView(ILIMSViewMixin, ListView):
         return ctx
 
     def get_template_names(self):
-        if getattr(self.request, "htmx", False) and not getattr(self.request.htmx, "boosted", False):
+        if getattr(self.request, "htmx", False) and not getattr(
+            self.request.htmx, "boosted", False
+        ):
             return ["workflow/partials/_sample_list_rows.html"]
         return [self.template_name]
 
@@ -168,58 +221,103 @@ class SampleCreateView(HtmxModalMixin, LoginRequiredMixin, View):
         mol_type, lock = mapping.get(return_to, (None, False))
         return return_to, mol_type, lock
 
+    def _get_instance(self, request):
+        edit_pk = request.GET.get("edit") or request.POST.get("edit")
+        if edit_pk:
+            try:
+                return Sample.objects.get(pk=edit_pk, is_deleted=False)
+            except (Sample.DoesNotExist, ValueError):
+                pass
+        return None
+
     def get(self, request):
         next_url = request.GET.get("next", reverse("core:sample_list"))
         return_to, initial_mol, lock = self._get_return_config(request)
+        instance = self._get_instance(request)
 
         form = SampleForm(
+            instance=instance,
             next_url=next_url,
+            request_get=request.GET,
             hide_advanced=flag_enabled("ui.simple_mode"),
             lock_molecular_type=lock,
             initial_molecular_type=initial_mol,
         )
 
+        title = "Edit Sample" if instance else self.modal_title
         return self.render_modal_or_page(request, {
-            "form": form, "next_url": next_url,
-            "modal_title": self.modal_title, "return_to": return_to,
+            "form": form,
+            "next_url": next_url,
+            "modal_title": title,
+            "edit_pk": str(instance.pk) if instance else "",
+            "return_to": return_to,
             "locked_molecular_type": initial_mol if lock else "",
         })
 
     def post(self, request):
         next_url = request.POST.get("next", reverse("core:sample_list"))
         return_to, initial_mol, lock = self._get_return_config(request)
+        instance = self._get_instance(request)
+
+        # SmartSelect: ensure main keys are populated from __text when needed
+        data = request.POST.copy()
+        for key in ("client_name", "product_category", "product_type", "requested_test"):
+            raw = (data.get(key) or "").strip()
+            text = (data.get(f"{key}__text") or "").strip()
+            if not raw and text:
+                data[key] = text
 
         form = SampleForm(
-            request.POST,
+            data,
+            instance=instance,
             next_url=next_url,
             hide_advanced=flag_enabled("ui.simple_mode"),
             lock_molecular_type=lock,
             initial_molecular_type=initial_mol,
         )
 
-        # Resolve or create Client
-        client_pk_raw = (request.POST.get("client_name") or "").strip()
-        client_text = (request.POST.get("client_name__text") or "").strip()
+        # ── Resolve or create Client ──
+        client_pk_raw = (data.get("client_name") or "").strip()
+        client_text = (data.get("client_name__text") or "").strip()
+        if client_pk_raw and not _is_uuid(client_pk_raw):
+            client_text = client_text or client_pk_raw
+
         client_phone = (
-            request.POST.get("client_phone_mirror")
-            or request.POST.get("client_phone") or ""
+            data.get("client_phone_mirror")
+            or data.get("client_phone")
+            or ""
         ).strip()
 
         client = None
         try:
             if _is_uuid(client_pk_raw):
-                client = Client.objects.filter(pk=client_pk_raw, is_deleted=False).first()
+                client = Client.objects.filter(
+                    pk=client_pk_raw, is_deleted=False
+                ).first()
+
             if not client and client_text:
-                client = Client.objects.filter(name__iexact=client_text.strip(), is_deleted=False).first()
+                client = Client.objects.filter(
+                    name__iexact=client_text.strip(), is_deleted=False
+                ).first()
+
             if not client and client_text:
+                # New client path
                 if not client_phone:
-                    form.add_error("client_phone", "Phone required for new client (click + to unlock).")
-                elif Client.objects.filter(phone=client_phone, is_deleted=False).exists():
-                    form.add_error("client_phone", f"Phone '{client_phone}' already used.")
+                    form.add_error(
+                        "client_phone",
+                        "Phone required for new client (click + to unlock).",
+                    )
+                elif Client.objects.filter(
+                    phone=client_phone, is_deleted=False
+                ).exists():
+                    form.add_error(
+                        "client_phone",
+                        f"Phone '{client_phone}' already used.",
+                    )
                 else:
                     country = Country.objects.filter(is_active=True).first()
                     if not country:
-                        form.add_error(None, "No country in Settings.")
+                        form.add_error(None, "No country configured in Settings.")
                     else:
                         client = Client.objects.create(
                             name=client_text.strip().title(),
@@ -227,8 +325,12 @@ class SampleCreateView(HtmxModalMixin, LoginRequiredMixin, View):
                             country=country,
                             code=next_code("CLIENT", country, None),
                         )
-                        log_audit(request.user, "CREATE", client,
-                                  get_changes(None, client, ["name", "phone", "code"]))
+                        log_audit(
+                            request.user,
+                            "CREATE",
+                            client,
+                            get_changes(None, client, ["name", "phone", "code"]),
+                        )
         except Exception as e:
             form.add_error(None, str(e))
 
@@ -236,31 +338,48 @@ class SampleCreateView(HtmxModalMixin, LoginRequiredMixin, View):
             form.add_error("client_name", "Select or type a client.")
 
         if not (client and form.is_valid()):
+            if client_text and "client_name" in form.fields:
+                form.fields["client_name"].widget.attrs["data-prefill-display"] = client_text
+            if client and _is_uuid(str(getattr(client, "pk", ""))):
+                try:
+                    form.data = form.data.copy()
+                    form.data["client_name"] = str(client.pk)
+                except Exception:
+                    pass
+
             return self.render_modal_or_page(request, {
-                "form": form, "next_url": next_url,
-                "modal_title": self.modal_title, "return_to": return_to,
+                "form": form,
+                "next_url": next_url,
+                "modal_title": "Edit Sample" if instance else self.modal_title,
+                "edit_pk": str(instance.pk) if instance else "",
+                "return_to": return_to,
                 "locked_molecular_type": initial_mol if lock else "",
             }, status=400)
 
+        # ── Resolve Category & Product Type ──
         cat_text = (form.cleaned_data.get("_category_text") or "").strip().title()
         type_text = (form.cleaned_data.get("_type_text") or "").strip().title()
-        test_text = (form.cleaned_data.get("_test_text") or "").strip()
-        molecular_type = form.cleaned_data.get("molecular_type") or initial_mol
+        test_text = (form.cleaned_data.get("_test_text") or "").strip().upper()
+        molecular_type = form.cleaned_data.get("molecular_type") or initial_mol or "PCR_QPCR"
 
-        cat = ProductCategory.objects.get_or_create(
-            name=cat_text, defaults={"is_active": True}
-        )[0] if cat_text else None
+        cat = None
+        if cat_text:
+            cat, _ = ProductCategory.objects.get_or_create(
+                name=cat_text, defaults={"is_active": True},
+            )
 
         ptype = None
         if type_text:
             ptype, _ = ProductType.objects.get_or_create(
-                name=type_text, defaults={"category": cat, "is_active": True}
+                name=type_text,
+                defaults={"category": cat, "is_active": True},
             )
             if cat and not ptype.category_id:
                 ptype.category = cat
                 ptype.save(update_fields=["category"])
 
         method_category = MOLECULAR_TYPE_TO_METHOD_CATEGORY.get(molecular_type, "TEST")
+
         lab_test = None
         if test_text:
             lab_test, _ = LabMethod.objects.get_or_create(
@@ -273,36 +392,133 @@ class SampleCreateView(HtmxModalMixin, LoginRequiredMixin, View):
         sample.product_category = cat
         sample.product_type = ptype
         sample.requested_test = lab_test
-        sample.molecular_type = molecular_type
-        sample.workflow_state = Sample.WorkflowState.RECEIVED
-        sample.code = next_code("SAMPLE", client.country, getattr(client, "region", None))
+        if molecular_type:
+            sample.molecular_type = molecular_type
+
+        if not instance:
+            sample.workflow_state = Sample.WorkflowState.RECEIVED
+            sample.code = next_code(
+                "SAMPLE",
+                client.country,
+                getattr(client, "region", None),
+            )
+            if (
+                hasattr(request.user, "laboratory")
+                and request.user.laboratory
+                and not sample.laboratory_id
+            ):
+                sample.laboratory = request.user.laboratory
+
         sample.save()
-        log_audit(request.user, "CREATE", sample,
-                  get_changes(None, sample, ["code", "client_id", "product_name", "molecular_type"]))
+
+        if not sample.tracking_code:
+            sample.generate_tracking_code()
+
+        from apps.core.models import SampleTest
+        if lab_test and not sample.attached_tests.filter(
+            test_type=lab_test, is_deleted=False
+        ).exists():
+            SampleTest.objects.create(
+                code=next_code("TEST", client.country if client else None),
+                sample=sample,
+                test_type=lab_test,
+                operator=sample.assigned_to or request.user,
+            )
+
+        action = "UPDATE" if instance else "CREATE"
+        log_audit(
+            request.user,
+            action,
+            sample,
+            get_changes(
+                instance,
+                sample,
+                ["code", "client_id", "product_name", "requested_test_id"],
+            ),
+        )
+
+        # ══════════════════════════════════════════════════════════
+        # NOTIFICATIONS & REMINDERS
+        # ══════════════════════════════════════════════════════════
+        sample_url = reverse("core:sample_detail", args=[sample.pk])
+
+        # Always notify the user who saved
+        notify_self(
+            request.user,
+            title=f"{'Updated' if instance else 'Saved'} sample: {sample.code}",
+            message=f"{sample.product_name} · Due: {sample.due_date or '—'}",
+            level="success",
+            url=sample_url,
+        )
+
+        # Work items (Reminders and Assignee notifications) only on creation
+        if not instance:
+            assignee = sample.assigned_to or request.user
+
+            if sample.assigned_to_id and sample.assigned_to_id != request.user.id:
+                push_notification(
+                    user=sample.assigned_to,
+                    title=f"New Sample Assigned: {sample.code}",
+                    message=f"You have been assigned to analyze {sample.product_name}.",
+                    level="info",
+                    url=sample_url,
+                )
+
+            if sample.due_date:
+                today = timezone.now().date()
+                days_until_due = (sample.due_date - today).days
+
+                if days_until_due < 0:
+                    kind = Reminder.Kind.OVERDUE
+                elif days_until_due == 0:
+                    kind = Reminder.Kind.DUE_TODAY
+                elif days_until_due <= 2:
+                    kind = Reminder.Kind.DUE_SOON
+                else:
+                    kind = Reminder.Kind.CUSTOM
+
+                priority = (
+                    Reminder.Priority.URGENT 
+                    if sample.priority == "URGENT" 
+                    else Reminder.Priority.NORMAL
+                )
+                
+                title = f"Complete Test: {sample.code}"
+                
+                if not Reminder.objects.filter(
+                    sample=sample,
+                    assigned_to=assignee,
+                    title=title,
+                    is_done=False,
+                ).exists():
+                    Reminder.objects.create(
+                        kind=kind,
+                        priority=priority,
+                        title=title,
+                        message=f"Requested Test: {sample.requested_test.name if sample.requested_test else 'General'} | Product: {sample.product_name}",
+                        sample=sample,
+                        assigned_to=assignee,
+                        due_date=sample.due_date,
+                    )
+
+            if sample.priority == "URGENT":
+                try:
+                    push_to_role(
+                        "LAB_MANAGER",
+                        title=f"⚠️ Urgent Sample Received: {sample.code}",
+                        message=f"Client: {client.name} | Product: {sample.product_name}",
+                        level="warning",
+                        url=sample_url,
+                    )
+                except Exception:
+                    pass
 
         if return_to in ("dna", "test", "pcr", "sequencing"):
             return self._reopen_parent_modal(request, return_to, sample)
 
         receipt_url = reverse("core:sample_receipt", args=[sample.pk])
         if self._is_modal(request):
-            samples = Sample.objects.filter(is_deleted=False).select_related(
-                "client", "product_type"
-            )[:50]
-            rows = render_to_string(
-                "workflow/partials/_sample_list_rows.html",
-                {"samples": samples}, request=request,
-            )
-            toast = render_to_string(
-                "partials/_toast.html",
-                {"message": f"Sample {sample.code} registered.", "level": "success", "oob": True},
-            )
-            body = (
-                '<div id="modal-host" hx-swap-oob="innerHTML"></div>'
-                + toast
-                + f'<tbody id="sample-tbody" hx-swap-oob="innerHTML">{rows}</tbody>'
-                + f"<script>window.open('{receipt_url}','_blank','width=800,height=900');</script>"
-            )
-            return HttpResponse(body)
+            return _full_reload(next_url + f"?saved={sample.code}")
 
         messages.success(request, f"Sample {sample.code} registered.")
         return redirect(receipt_url)
@@ -366,44 +582,73 @@ class SampleCreateView(HtmxModalMixin, LoginRequiredMixin, View):
 class SampleReceiptView(ILIMSViewMixin, View):
     def get(self, request, pk):
         sample = get_object_or_404(
-            Sample.objects.select_related("client", "product_category", "product_type", "requested_test"),
-            pk=pk, is_deleted=False,
-        )
-        return render(request, "workflow/sample_receipt.html", {
-            "page_title": "Sample Receipt", "page_icon": "print", "sample": sample,
-        })
-
-
-class SampleDetailView(ILIMSViewMixin, View):
-    def get(self, request, pk):
-        sample = get_object_or_404(
             Sample.objects.select_related(
-                "client", "product_category", "product_type", "requested_test",
-                "assigned_to", "batch",
+                "client", "client__country", "product_category",
+                "product_type", "requested_test", "laboratory",
             ),
             pk=pk, is_deleted=False,
         )
+
+        if not sample.tracking_code:
+            sample.generate_tracking_code()
+
+        from apps.core.utils_qr import generate_qr_svg
+        qr_svg = generate_qr_svg(sample.tracking_code)
+
+        return render(request, "workflow/sample_receipt.html", {
+            "page_title": f"Receipt: {sample.code}",
+            "page_icon": "print",
+            "sample": sample,
+            "qr_svg": qr_svg,
+        })
+
+
+class SampleDetailView(LaboratoryScopedPermissionMixin, ILIMSViewMixin, View):
+    def get(self, request, pk):
+        sample = get_object_or_404(
+            Sample.objects.select_related(
+                "client", "product_category", "product_type",
+                "requested_test", "assigned_to", "batch",
+            ),
+            pk=pk,
+            is_deleted=False,
+        )
+
+        self.check_object_permission(request, sample, lab_attr="laboratory")
+
         events = sample.events.select_related("changed_by").all()
         from apps.core.models import AuditLog
-        audits = AuditLog.objects.filter(record_id=str(sample.pk), model_name="Sample")
+        audits = AuditLog.objects.filter(
+            record_id=str(sample.pk), model_name="Sample",
+        )
         tab = request.GET.get("tab", "overview")
 
-        dna_extractions = sample.dna_extractions.filter(is_deleted=False).select_related("method")
+        dna_extractions = sample.dna_extractions.filter(
+            is_deleted=False,
+        ).select_related("method")
+
         pcr_tests = sample.molecular_tests.filter(
-            is_deleted=False, test_type__category__in=["TEST", "ASSAY"]
-        ).select_related("test_type", "target")
-        seq_tests = sample.molecular_tests.filter(
-            is_deleted=False, test_type__category="SEQUENCING"
+            is_deleted=False,
+            test_type__category__in=["TEST", "ASSAY"],
         ).select_related("test_type", "target")
 
-        # Tests with no test_type or unknown category also go into PCR bucket
+        seq_tests = sample.molecular_tests.filter(
+            is_deleted=False,
+            test_type__category="SEQUENCING",
+        ).select_related("test_type", "target")
+
         untyped_tests = sample.molecular_tests.filter(
-            is_deleted=False, test_type__isnull=True
+            is_deleted=False,
+            test_type__isnull=True,
         ).select_related("target")
 
         return render(request, "workflow/sample_detail.html", {
-            "page_title": f"Sample {sample.code}", "page_icon": "sample",
-            "sample": sample, "events": events, "audits": audits, "active_tab": tab,
+            "page_title": f"Sample {sample.code}",
+            "page_icon": "sample",
+            "sample": sample,
+            "events": events,
+            "audits": audits,
+            "active_tab": tab,
             "dna_extractions": dna_extractions,
             "pcr_tests": list(pcr_tests) + list(untyped_tests),
             "seq_tests": seq_tests,
@@ -428,28 +673,71 @@ class SampleAdvanceStatusView(HtmxModalMixin, LoginRequiredMixin, View):
         sample = get_object_or_404(Sample, pk=pk, is_deleted=False)
         form = AdvanceStatusForm(initial={"to_state": sample.workflow_state})
         return self.render_modal_or_page(request, {
-            "form": form, "sample": sample,
+            "form": form,
+            "sample": sample,
             "modal_title": f"Update Status: {sample.code}",
         })
 
     def post(self, request, pk):
         sample = get_object_or_404(Sample, pk=pk, is_deleted=False)
         form = AdvanceStatusForm(request.POST)
+
         if form.is_valid():
             to_state = form.cleaned_data["to_state"]
             notes = form.cleaned_data["notes"]
             sample.advance(request.user, to_state, notes)
 
+            try:
+                sample_url = reverse("core:sample_detail", args=[sample.pk])
+                new_state = sample.workflow_state
+                
+                notify_self(
+                    request.user,
+                    title=f"Status updated: {sample.code}",
+                    message=sample.get_workflow_state_display(),
+                    level="info",
+                    url=sample_url,
+                )
+
+                if new_state == "REPORT_READY" and sample.assigned_to:
+                    push_notification(
+                        user=sample.assigned_to,
+                        title=f"✅ Report Ready: {sample.code}",
+                        message=f"{sample.product_name} is ready for delivery.",
+                        level="success",
+                        url=sample_url,
+                    )
+
+                if new_state == "REJECTED" and sample.assigned_to:
+                    push_notification(
+                        user=sample.assigned_to,
+                        title=f"❌ Sample Rejected: {sample.code}",
+                        message=notes or "Sample was rejected during review.",
+                        level="error",
+                        url=sample_url,
+                    )
+
+                if new_state in ("REPORT_SENT", "REJECTED"):
+                    Reminder.objects.filter(
+                        sample=sample, is_done=False,
+                    ).update(is_done=True)
+
+            except Exception:
+                pass
+
             if self._is_modal(request):
-                # Live swap: return updated status card + close modal
                 html = render_to_string(
                     "workflow/partials/_status_card.html",
-                    {"sample": sample}, request=request,
+                    {"sample": sample},
+                    request=request,
                 )
                 toast = render_to_string(
                     "partials/_toast.html",
-                    {"message": f"Status updated to {sample.get_workflow_state_display()}.",
-                     "level": "success", "oob": True},
+                    {
+                        "message": f"Status updated to {sample.get_workflow_state_display()}.",
+                        "level": "success",
+                        "oob": True,
+                    },
                 )
                 body = (
                     '<div id="modal-host" hx-swap-oob="innerHTML"></div>'
@@ -458,10 +746,14 @@ class SampleAdvanceStatusView(HtmxModalMixin, LoginRequiredMixin, View):
                 )
                 return HttpResponse(body)
 
-            messages.success(request, f"Status updated to {sample.get_workflow_state_display()}.")
+            messages.success(
+                request,
+                f"Status updated to {sample.get_workflow_state_display()}.",
+            )
             return redirect(reverse("core:sample_detail", args=[sample.pk]))
 
         return self.render_modal_or_page(request, {
-            "form": form, "sample": sample,
+            "form": form,
+            "sample": sample,
             "modal_title": f"Update Status: {sample.code}",
         }, status=400)

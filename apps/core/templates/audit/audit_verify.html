@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Audit Verification — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "audit" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:audit_list' %}" class="btn btn--secondary">← Audit Trail</a>
+    </div>
+</div>
+
+<div class="card max-w-lg">
+    <div class="card__body text-center p-xl">
+        {% if is_valid %}
+            <div class="text-ok mb-md" style="font-size: 54px;">✓</div>
+            <h2 class="text-2xl text-bold text-ok mb-sm">Audit Trail Integrity Verified!</h2>
+            <p class="text-secondary mb-lg">
+                Every cryptographic hash in the chain has been recalculated from genesis.
+                All <strong>{{ total_verified }}</strong> records match their expected SHA-256 signatures with zero tampering.
+            </p>
+            <div class="p-md border rounded bg-card-hover text-left">
+                <div class="text-xs text-muted text-uppercase">Latest Validated Chain Hash</div>
+                <code class="text-mono text-xs text-brand d-block mt-xs" style="word-break: break-all;">
+                    {{ latest_hash }}
+                </code>
+            </div>
+        {% else %}
+            <div class="text-danger mb-md" style="font-size: 54px;">✗</div>
+            <h2 class="text-2xl text-bold text-danger mb-sm">Integrity Check Failed!</h2>
+            <p class="text-secondary mb-md">
+                A mismatch was detected in the SHA-256 hash sequence. Record data or logs may have been tampered with.
+            </p>
+            {% if tampered_record %}
+            <div class="p-md border rounded bg-card-hover text-left border-danger">
+                <div class="text-xs text-danger text-bold">Tampered Record Detected:</div>
+                <div class="text-sm mt-xs">Record ID: <code>{{ tampered_record.id }}</code></div>
+                <div class="text-sm">Model: <code>{{ tampered_record.model_name }}</code></div>
+                <div class="text-sm">Timestamp: {{ tampered_record.timestamp }}</div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

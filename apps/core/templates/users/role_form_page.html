@@ -1,0 +1,14 @@
+    {% extends "base.html" %}
+{% load ilims_tags %}
+{% block title %}{{ modal_title }} — {{ ILIMS_TITLE }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__text"><h1>{{ modal_title }}</h1></div>
+    </div>
+    <a href="{% url 'core:roles_list' %}" class="btn btn--secondary">← Back</a>
+</div>
+<div class="card max-w-lg"><div class="card__body">
+{% include "users/partials/_modal_role_form.html" %}
+</div></div>
+{% endblock %}  

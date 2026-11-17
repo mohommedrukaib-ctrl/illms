@@ -195,4 +195,79 @@
 
 .theme-toggle-form .topbar__btn {
     /* inherits button styles */
+
+
+}
+
+/* ─── Bell dropdown ─── */
+.bell-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.bell-dropdown__list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-tooltip);
+    margin-top: 8px;
+}
+
+.topbar__btn:hover .bell-dropdown__list,
+.bell-dropdown__list:hover {
+    display: block;
+}
+
+.bell-dropdown__item {
+    display: block;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: background var(--transition-fast);
+}
+
+.bell-dropdown__item:hover {
+    background: var(--bg-card-hover);
+    text-decoration: none;
+}
+
+.bell-dropdown__title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.bell-dropdown__time {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.bell-dropdown__empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.bell-dropdown__footer {
+    display: block;
+    padding: 10px;
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--brand);
+    border-top: 1px solid var(--border-color);
+    text-decoration: none;
+}
+
+.bell-dropdown__footer:hover {
+    background: var(--bg-card-hover);
+    text-decoration: none;
+
 }

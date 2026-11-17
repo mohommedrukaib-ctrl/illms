@@ -1,0 +1,83 @@
+Part 1: What is the cron command and how to set it up?
+What is it?
+cron is a time-based job scheduler in Linux/Unix operating systems.
+
+The line:
+
+Bash
+
+*/15 * * * * cd /path/to/ilims && /path/to/venv/bin/python manage.py run_reminders >> /path/to/logs/cron.log 2>&1
+tells the server:
+
+*/15 * * * *: Every 15 minutes, every hour, every day.
+cd /path/to/ilims: Navigate into the project folder.
+python manage.py run_reminders: Execute your reminder engine command (check for due samples, push notifications, create reminders).
+>> /path/to/logs/cron.log 2>&1: Append all output or errors into a log file.
+How to set it up?
+Option A: On Windows (Your Development Machine C:\illms-main\)
+On Windows, you have two choices:
+
+Manual / Terminal Testing (Easiest in development):
+Simply run this whenever you want to trigger the reminder engine:
+
+cmd
+
+python manage.py run_reminders
+Windows Task Scheduler (Automatic background execution):
+
+Press Win + R, type taskschd.msc, and hit Enter.
+Click Create Basic Task...
+Name it: ILIMS Reminder Engine
+Trigger: Select Daily 
+→
+→ check Repeat task every: 15 minutes.
+Action: Select Start a Program.
+Program/script: C:\illms-main\venv\Scripts\python.exe
+Add arguments: manage.py run_reminders
+Start in: C:\illms-main
+Click Finish.
+Option B: On Linux (Production Deployment)
+When you deploy to an Ubuntu/Debian server:
+
+Open the crontab editor:
+Bash
+
+crontab -e
+Paste the line at the bottom (replace paths with your server's actual paths):
+Bash
+
+*/15 * * * * cd /var/www/ilims && /var/www/ilims/venv/bin/python manage.py run_reminders >> /var/www/ilims/logs/cron.log 2>&1
+Save and exit (Ctrl + X 
+→
+→ Y 
+→
+→ Enter).
+
+
+from apps.core.models import FeatureFlag
+
+flags = [
+    ("module.batches", "Batch Management", "Modules"),
+    ("module.lab_tests", "Diagnostic Lab Tests", "Modules"),
+    ("module.dna_extraction", "DNA Extraction", "Modules"),
+    ("module.pcr", "PCR / qPCR Assays", "Modules"),
+    ("module.microorganism_id", "Microorganism Catalog", "Modules"),
+    ("module.qc_approval", "Quality Control Approval", "Modules"),
+    ("module.reports", "Safety Reports & Deliverables", "Modules"),
+    ("module.audit_export", "Audit Export", "Modules"),
+    ("module.reminders", "Reminders Engine", "Modules"),
+    ("module.notifications", "Notifications Alerts", "Modules"),
+    ("module.audit_trail", "Audit Trail Ledger", "Modules"),
+    ("module.recycle_bin", "Recycle Bin", "Modules"),
+    ("module.users", "User Management", "Modules"),
+    ("module.customer_portal", "Public Customer Portal", "Modules"),
+]
+
+for key, label, group in flags:
+    FeatureFlag.objects.get_or_create(
+        key=key,
+        defaults={"label": label, "group": group, "enabled": True, "is_core": False}
+    )
+    print(f"Flag: {key} verified.")
+
+exit()  

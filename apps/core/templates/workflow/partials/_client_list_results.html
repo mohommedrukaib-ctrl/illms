@@ -1,0 +1,20 @@
+{% load ilims_tags %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Client Name</th>
+                <th>Contact</th>
+                <th>Phone</th>
+                <th>Region</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="client-tbody">
+            {% include "workflow/partials/_client_list_rows.html" %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" %}
+</div>

@@ -1,47 +1,153 @@
+import uuid
+from datetime import timedelta
+
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils import timezone
 
 from apps.accounts.decorators import role_required
 from apps.core.forms import CountryForm, LaboratoryForm, RegionForm, SystemSettingsForm
 from apps.core.models import (
-    Client, Country, FeatureFlag, Laboratory, Region, Sample,
-    SystemSetting, next_code
+    AuditLog, Client, Country, DnaExtraction, FeatureFlag, FoodBatch, Laboratory,
+    LabMethod, Microorganism, MolecularTest, ProductCategory, ProductType,
+    QcRecord, Region, Reminder, RiskLevel, Sample, SampleTest, SystemSetting,
+    TestResult, next_code,
 )
 from apps.core.smart_select import SmartRegistry, smart_search
+
+User = get_user_model()
 
 
 # ─── DASHBOARD ───
 
 @login_required
 def dashboard_view(request):
-    """Main dashboard with real-time KPI statistics."""
-    from apps.core.models import MolecularTest
+    """
+    Main operations dashboard with real-time KPI statistics,
+    pure SVG throughput and pathogen distribution charts,
+    and right-hand action cards.
+    """
+    now = timezone.now()
+    today = now.date()
+    current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    active_samples = Sample.objects.filter(is_deleted=False, status__is_terminal=False).count()
-    needs_qc = Sample.objects.filter(is_deleted=False, status__name__in=["Analysis", "Testing In Progress"]).count()
+    # 1. KPI Counts
+    active_samples = Sample.objects.filter(
+        is_deleted=False,
+        workflow_state__in=["RECEIVED", "TESTING", "ANALYSIS", "REPORT_PREP"],
+    ).count()
+
+    testing_count = Sample.objects.filter(
+        is_deleted=False,
+        workflow_state__in=["TESTING", "ANALYSIS"],
+    ).count()
+
     total_clients = Client.objects.filter(is_deleted=False).count()
 
-    current_month = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    monthly_tests = MolecularTest.objects.filter(is_deleted=False, run_date__gte=current_month).count()
+    monthly_tests = MolecularTest.objects.filter(
+        is_deleted=False, run_date__gte=current_month_start
+    ).count()
 
-    recent_samples = Sample.objects.filter(is_deleted=False).select_related("client", "status").order_by("-created_at")[:5]
+    # 2. Stacked Side Cards Data
+    today_reminders = Reminder.objects.filter(
+        is_done=False, due_date=today
+    ).select_related("sample", "assigned_to")[:5]
+
+    overdue_samples = Sample.objects.filter(
+        is_deleted=False,
+        due_date__lt=today,
+        workflow_state__in=["RECEIVED", "TESTING", "ANALYSIS", "REPORT_PREP"],
+    ).select_related("client")[:5]
+
+    recent_detections = TestResult.objects.filter(
+        is_deleted=False,
+        detection="DETECTED",
+    ).select_related("microorganism", "test", "test__sample")[:5]
+
+    recent_samples = Sample.objects.filter(
+        is_deleted=False
+    ).select_related("client").order_by("-created_at")[:6]
+
+    # 3. Pure SVG Monthly Throughput Calculation (Last 6 Months)
+    monthly_data = []
+    max_count = 1
+    for i in range(5, -1, -1):
+        m_start = (current_month_start - timedelta(days=i * 30)).replace(day=1)
+        if m_start.month == 12:
+            m_end = m_start.replace(year=m_start.year + 1, month=1)
+        else:
+            m_end = m_start.replace(month=m_start.month + 1)
+
+        count = Sample.objects.filter(
+            is_deleted=False,
+            created_at__gte=m_start,
+            created_at__lt=m_end,
+        ).count()
+
+        if count > max_count:
+            max_count = count
+
+        monthly_data.append({
+            "month_label": m_start.strftime("%b"),
+            "count": count,
+        })
+
+    chart_bars = []
+    x_offset = 35
+    for idx, item in enumerate(monthly_data):
+        height = int((item["count"] / max_count) * 100) if max_count else 0
+        y = 130 - height
+        chart_bars.append({
+            "label": item["month_label"],
+            "count": item["count"],
+            "x": x_offset + (idx * 75),
+            "y": y,
+            "width": 38,
+            "height": max(height, 4),
+        })
+
+    # 4. Pathogen Distribution
+    total_detections = TestResult.objects.filter(is_deleted=False, detection="DETECTED").count()
+    top_pathogens = []
+    if total_detections > 0:
+        grouped = (
+            TestResult.objects.filter(is_deleted=False, detection="DETECTED")
+            .values("microorganism__name", "microorganism__code")
+            .annotate(count=Count("id"))
+            .order_by("-count")[:4]
+        )
+        for g in grouped:
+            pct = int((g["count"] / total_detections) * 100)
+            top_pathogens.append({
+                "name": g["microorganism__name"],
+                "code": g["microorganism__code"],
+                "count": g["count"],
+                "percent": pct,
+            })
 
     return render(request, "pages/placeholder.html", {
-        "page_title": "Dashboard",
-        "page_subtitle": "Overview of laboratory operations",
+        "page_title": "Operations Dashboard",
+        "page_subtitle": "Real-time laboratory workflow, diagnostics & quality metrics",
         "page_icon": "dashboard",
         "stats": {
             "active_samples": active_samples,
-            "needs_qc": needs_qc,
+            "testing_count": testing_count,
             "total_clients": total_clients,
             "monthly_tests": monthly_tests,
         },
+        "chart_bars": chart_bars,
+        "max_bar_count": max_count,
+        "top_pathogens": top_pathogens,
+        "total_detections": total_detections,
+        "today_reminders": today_reminders,
+        "overdue_samples": overdue_samples,
+        "recent_detections": recent_detections,
         "recent_samples": recent_samples,
     })
 
@@ -50,7 +156,7 @@ def dashboard_view(request):
 
 @login_required
 def theme_toggle_view(request):
-    """Toggle between light and dark theme via POST form (no JS needed)."""
+    """Toggle between light and dark theme via POST form (no JS required)."""
     if request.method == "POST":
         current = request.COOKIES.get("ilims_theme", "light")
         new_theme = "dark" if current == "light" else "light"
@@ -69,12 +175,24 @@ def theme_toggle_view(request):
     return render(request, "partials/_theme_toggle.html")
 
 
+# ─── DOCUMENTATION USER MANUAL ───
+
+@login_required
+def documentation_view(request):
+    """Render the comprehensive interactive user manual."""
+    return render(request, "pages/documentation.html", {
+        "page_title": "User Manual",
+        "page_subtitle": "Complete feature and operational reference guide",
+        "page_icon": "report",
+    })
+
+
 # ─── SETTINGS HUB ───
 
 @login_required
 @role_required("ADMIN")
 def settings_hub_view(request):
-    """Central interface to manage numbering configurations, feature toggles, and core data."""
+    """Central settings and configuration interface."""
     system_settings = SystemSetting.get_settings()
     countries = Country.objects.all()
     regions = Region.objects.select_related("country").all()
@@ -167,43 +285,61 @@ def settings_hub_view(request):
 
 # ─── SMART SELECT ENDPOINTS ───
 
+def _is_uuid(val) -> bool:
+    if not val:
+        return False
+    try:
+        uuid.UUID(str(val))
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
 @login_required
 def smart_select_results(request, kind_key):
-    """HTMX live search + category/molecular cascade."""
+    """HTMX live search and filter endpoint for SmartSelect fields."""
     kind = SmartRegistry.get(kind_key)
     if kind is None:
         return HttpResponse(status=404)
 
-    field_name = request.GET.get("field", "")
-    input_id = request.GET.get("input_id", "")
+    field_name = request.GET.get("field", "").strip()
+    input_id = request.GET.get("input_id", "").strip()
 
     query = request.GET.get("q", "").strip()
-    if not query:
-        for k, v in request.GET.items():
-            if k.endswith("__text") or k == field_name:
-                query = (v or "").strip()
-                break
+    if not query and field_name:
+        query = (
+            request.GET.get(f"{field_name}__text")
+            or request.GET.get(field_name)
+            or ""
+        ).strip()
+
     if "js:event" in query:
         query = ""
 
     qs = kind.queryset_fn()
 
     category_filter = (
-        request.GET.get("category")
-        or request.GET.get("product_category")
+        request.GET.get("product_category")
         or request.GET.get("product_category__text")
+        or request.GET.get("category")
         or ""
     ).strip()
 
     molecular_type_filter = (request.GET.get("molecular_type") or "").strip()
 
     if kind_key == "product_type" and category_filter:
-        qs = qs.filter(
-            Q(category__name__icontains=category_filter) | Q(category__isnull=True)
-        )
+        if _is_uuid(category_filter):
+            qs = qs.filter(
+                Q(category_id=category_filter) | Q(category__isnull=True)
+            )
+        else:
+            qs = qs.filter(
+                Q(category__name__iexact=category_filter)
+                | Q(category__name__icontains=category_filter)
+                | Q(category__isnull=True)
+            )
 
     if kind_key == "lab_method":
-        # Filter by molecular type → LabMethod.category
         MOL_MAP = {"DNA_EXTRACTION": "DNA_EXTRACTION", "PCR_QPCR": "TEST", "SEQUENCING": "SEQUENCING"}
         if molecular_type_filter and molecular_type_filter in MOL_MAP:
             qs = qs.filter(category=MOL_MAP[molecular_type_filter])
@@ -244,7 +380,7 @@ def smart_select_results(request, kind_key):
         "picker_url": reverse("core:smart_picker", args=[kind_key]),
     })
 
-    
+
 @login_required
 def smart_picker(request, kind_key):
     """Full-page picker fallback for JS-disabled browsers."""
@@ -297,7 +433,7 @@ def smart_select_demo(request):
 
     return render(request, "pages/smart_select_demo.html", {
         "page_title": "SmartSelect Demo",
-        "page_subtitle": "Verify type-ahead + picker + resolver behavior",
+        "page_subtitle": "Verify type-ahead, picker, and resolver behavior",
         "page_icon": "search",
         "country_widget": build_widget("country"),
         "region_widget": build_widget("region"),
@@ -310,9 +446,7 @@ def smart_select_demo(request):
 @login_required
 @role_required("ADMIN")
 def recycle_bin_view(request):
-    """View and manage soft-deleted records."""
-    from apps.core.models import Microorganism
-
+    """View and restore or permanently remove soft-deleted records."""
     if request.method == "POST":
         action = request.POST.get("action")
         item_type = request.POST.get("type")
@@ -322,24 +456,41 @@ def recycle_bin_view(request):
             "client": Client,
             "sample": Sample,
             "microorganism": Microorganism,
+            "dna_extraction": DnaExtraction,
+            "molecular_test": MolecularTest,
+            "food_batch": FoodBatch,
+            "user": User,
+            "sample_test": SampleTest,
         }
         model = model_map.get(item_type)
         if model:
-            obj = get_object_or_404(model, pk=item_id)
-            if action == "restore":
-                obj.is_deleted = False
-                if hasattr(obj, "is_active"):
-                    obj.is_active = True
-                obj.save()
-                messages.success(request, f"Restored {obj}.")
-            elif action == "hard_delete":
-                obj.delete()
-                messages.success(request, f"Permanently deleted record.")
+            try:
+                obj = model.objects.get(pk=item_id)
+                if action == "restore":
+                    obj.is_deleted = False
+                    if hasattr(obj, "is_active"):
+                        obj.is_active = True
+                    obj.save()
+                    messages.success(request, f"Restored {obj}.")
+                elif action == "hard_delete":
+                    label = str(obj)
+                    obj.delete()
+                    messages.success(request, f"Permanently removed {label}.")
+            except model.DoesNotExist:
+                messages.error(request, "Record not found.")
         return redirect("core:recycle_bin")
 
     clients = Client.objects.filter(is_deleted=True)
-    samples = Sample.objects.filter(is_deleted=True)
+    samples = Sample.objects.filter(is_deleted=True).select_related("client")
     microbes = Microorganism.objects.filter(is_deleted=True)
+    batches = FoodBatch.objects.filter(is_deleted=True).select_related("client")
+    dna = DnaExtraction.objects.filter(is_deleted=True).select_related("sample")
+    tests = MolecularTest.objects.filter(is_deleted=True).select_related("sample")
+
+    total_count = (
+        clients.count() + samples.count() + microbes.count()
+        + batches.count() + dna.count() + tests.count()
+    )
 
     return render(request, "pages/recycle_bin.html", {
         "page_title": "Recycle Bin",
@@ -348,40 +499,91 @@ def recycle_bin_view(request):
         "clients": clients,
         "samples": samples,
         "microbes": microbes,
+        "batches": batches,
+        "dna": dna,
+        "tests": tests,
+        "total": total_count,
     })
 
 
 @login_required
 def soft_delete_record(request):
-    """Generic endpoint to soft-delete records."""
+    """Generic endpoint to soft-delete records with dependency safety."""
     if request.method != "POST":
         return HttpResponse(status=405)
 
     model_name = request.POST.get("model")
     record_id = request.POST.get("id")
-
-    from apps.core.models import Microorganism
+    next_url = request.POST.get("next", request.META.get("HTTP_REFERER", "/"))
 
     model_map = {
         "client": Client,
         "sample": Sample,
         "microorganism": Microorganism,
+        "dna_extraction": DnaExtraction,
+        "molecular_test": MolecularTest,
+        "food_batch": FoodBatch,
+        "user": User,
+        "sample_test": SampleTest,
     }
 
     model = model_map.get(model_name)
     if not model:
-        return HttpResponse("Invalid model", status=400)
+        messages.error(request, "Invalid model.")
+        return redirect(next_url)
 
-    obj = get_object_or_404(model, pk=record_id)
+    try:
+        obj = get_object_or_404(model, pk=record_id)
+    except Exception:
+        messages.error(request, "Record not found.")
+        return redirect(next_url)
+
+    fk_checks = {
+        "client": lambda o: o.samples.filter(is_deleted=False).exists(),
+        "sample": lambda o: (
+            o.dna_extractions.filter(is_deleted=False).exists()
+            or o.molecular_tests.filter(is_deleted=False).exists()
+            or o.attached_tests.filter(is_deleted=False).exists()
+        ),
+        "microorganism": lambda o: (
+            o.result_rows.filter(is_deleted=False).exists()
+            or o.tests.filter(is_deleted=False).exists()
+        ),
+        "dna_extraction": lambda o: o.tests.filter(is_deleted=False).exists(),
+        "food_batch": lambda o: o.samples.filter(is_deleted=False).exists(),
+        "user": lambda o: (
+            o.dna_extractions.filter(is_deleted=False).exists()
+            or o.molecular_tests.filter(is_deleted=False).exists()
+            or o.conducted_sample_tests.filter(is_deleted=False).exists()
+        ),
+    }
+
+    check_fn = fk_checks.get(model_name)
+    if check_fn and check_fn(obj):
+        messages.error(
+            request,
+            f"Cannot delete {obj} — it has active linked records. "
+            f"Remove or reassign dependent records first."
+        )
+        return redirect(next_url)
+
+    if model_name == "user" and obj.pk == request.user.pk:
+        messages.error(request, "You cannot delete your own account.")
+        return redirect(next_url)
 
     try:
         if hasattr(obj, "soft_delete"):
             obj.soft_delete()
-            messages.success(request, f"{obj} moved to Recycle Bin.")
-    except ValidationError as e:
-        messages.error(request, e.message if hasattr(e, "message") else str(e))
+        else:
+            obj.is_deleted = True
+            if hasattr(obj, "is_active"):
+                obj.is_active = False
+            obj.save(update_fields=["is_deleted", "is_active"])
+        messages.success(request, f"{obj} moved to the Recycle Bin.")
+    except Exception as e:
+        messages.error(request, str(e))
 
-    return redirect(request.META.get("HTTP_REFERER", "/"))
+    return redirect(next_url)
 
 
 # ─── ERROR HANDLERS ───
@@ -400,4 +602,3 @@ def error_404(request, exception=None):
 
 def error_500(request):
     return render(request, "errors/500.html", status=500)
-

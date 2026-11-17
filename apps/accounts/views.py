@@ -36,20 +36,35 @@ class ILIMSLoginView(LoginView):
         login(self.request, user)
         self.request.session["last_activity"] = __import__("time").time()
 
+
         # Check if 2FA is needed
+
+        # Check if user already has a confirmed 2FA device
+
         from django_otp import devices_for_user
 
         confirmed_devices = list(devices_for_user(user, confirmed=True))
         if confirmed_devices:
+
             self.request.session["otp_verified"] = False
             return redirect(reverse("accounts:verify_2fa"))
 
         if user.must_setup_2fa:
             return redirect(reverse("accounts:setup_2fa"))
 
+
+            # User has 2FA set up — require verification
+            self.request.session["otp_verified"] = False
+            return redirect(reverse("accounts:verify_2fa"))
+
+        # No confirmed device — skip 2FA entirely (it is optional)
+
         self.request.session["otp_verified"] = True
         messages.success(self.request, f"Welcome back, {user.get_short_name()}!")
         return redirect(self.get_success_url())
+
+
+
 
 
 class LogoutConfirmView(View):

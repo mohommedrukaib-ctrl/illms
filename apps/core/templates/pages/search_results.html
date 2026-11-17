@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Search — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "search" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-lg">
+    <div class="card__body">
+        <form method="get" action="{% url 'core:global_search' %}" class="d-flex gap-sm">
+            <input type="search" name="q" class="form-input" placeholder="Search samples, clients, batches, tests, microbes…"
+                   value="{{ query }}" autofocus style="flex:1; max-width:600px;">
+            <button type="submit" class="btn btn--primary">{% icon "search" "18" %} Search</button>
+        </form>
+    </div>
+</div>
+
+{% if query and total == 0 %}
+<div class="card">
+    <div class="card__body text-center p-lg">
+        <div class="empty-state__icon">{% icon "search" "64" %}</div>
+        <div class="empty-state__title">No results found</div>
+        <div class="empty-state__text">Try a different search term or check the spelling.</div>
+    </div>
+</div>
+{% endif %}
+
+{% if results.samples %}
+<div class="card mb-md">
+    <div class="card__header">
+        <div class="card__title">{% icon "sample" "18" %} Samples ({{ results.samples|length }})</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Product</th><th>Client</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for s in results.samples %}
+            <tr>
+                <td><a href="{% url 'core:sample_detail' s.pk %}" class="text-brand text-bold"><code class="text-mono">{{ s.code }}</code></a></td>
+                <td>{{ s.product_name }}</td>
+                <td class="text-sm text-muted">{{ s.client.name }}</td>
+                <td><span class="pill pill--{{ s.state_color }}">{{ s.get_workflow_state_display }}</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if results.clients %}
+<div class="card mb-md">
+    <div class="card__header">
+        <div class="card__title">{% icon "client" "18" %} Clients ({{ results.clients|length }})</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+            <tbody>
+            {% for c in results.clients %}
+            <tr>
+                <td><code class="text-mono">{{ c.code }}</code></td>
+                <td><strong>{{ c.name }}</strong></td>
+                <td class="text-sm">{{ c.email|default:"—" }}</td>
+                <td class="text-sm">{{ c.phone|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if results.batches %}
+<div class="card mb-md">
+    <div class="card__header">
+        <div class="card__title">{% icon "batch" "18" %} Batches ({{ results.batches|length }})</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Lot</th><th>Product</th><th>Client</th></tr></thead>
+            <tbody>
+            {% for b in results.batches %}
+            <tr>
+                <td><a href="{% url 'core:batch_detail' b.pk %}" class="text-brand"><code class="text-mono">{{ b.code }}</code></a></td>
+                <td><strong>{{ b.batch_number }}</strong></td>
+                <td>{{ b.product_name|default:"—" }}</td>
+                <td class="text-sm text-muted">{{ b.client.name }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if results.tests %}
+<div class="card mb-md">
+    <div class="card__header">
+        <div class="card__title">{% icon "flask" "18" %} Molecular Tests ({{ results.tests|length }})</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Sample</th><th>Assay</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for t in results.tests %}
+            <tr>
+                <td><a href="{% url 'core:test_detail' t.pk %}" class="text-brand"><code class="text-mono">{{ t.code }}</code></a></td>
+                <td>{{ t.sample.code }}</td>
+                <td>{{ t.assay_name|default:"—" }}</td>
+                <td class="text-sm text-muted">{{ t.run_date|date:"Y-m-d" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if results.microbes %}
+<div class="card mb-md">
+    <div class="card__header">
+        <div class="card__title">{% icon "microbe" "18" %} Microorganisms ({{ results.microbes|length }})</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Code</th><th>Name</th><th>Scientific Name</th></tr></thead>
+            <tbody>
+            {% for m in results.microbes %}
+            <tr>
+                <td><code class="text-mono">{{ m.code }}</code></td>
+                <td><strong>{{ m.name }}</strong></td>
+                <td class="text-sm text-muted">{{ m.scientific_name|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if results.users %}
+<div class="card mb-md">
+    <div class="card__header">
+        <div class="card__title">{% icon "users" "18" %} Users ({{ results.users|length }})</div>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+            <tbody>
+            {% for u in results.users %}
+            <tr>
+                <td><code class="text-mono">{{ u.username }}</code></td>
+                <td><strong>{{ u.get_full_name }}</strong></td>
+                <td class="text-sm">{{ u.email }}</td>
+                <td><span class="pill pill--info">{{ u.get_role_display }}</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

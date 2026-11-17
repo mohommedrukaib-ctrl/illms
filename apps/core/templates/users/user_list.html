@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}User Management — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "users" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+            <a href="{% url 'core:roles_list' %}" class="btn btn--secondary">
+    {% icon "settings" "18" %} Roles & Access
+</a>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:user_create' %}"
+           class="btn btn--primary"
+           hx-get="{% url 'core:user_create' %}?modal=1"
+           hx-target="#modal-host" hx-swap="innerHTML">
+            {% icon "plus" "18" %} Create User
+        </a>
+    </div>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card stat-card--brand">
+        <div class="stat-card__icon">{% icon "users" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Registered Accounts</div>
+            <div class="stat-card__value">{{ counts.total }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--ok">
+        <div class="stat-card__icon">{% icon "check" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Active Staff</div>
+            <div class="stat-card__value">{{ counts.active }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">{% icon "lock" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Deactivated / Inactive</div>
+            <div class="stat-card__value">{{ counts.inactive }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card__header">
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;"
+              hx-get="{% url 'core:users_list' %}" hx-target="#user-tbody"
+              hx-trigger="keyup delay:400ms from:input, change from:select" hx-swap="innerHTML">
+            <input type="search" name="q" class="form-input" placeholder="Search name, email, username…"
+                   value="{{ current_q }}" style="max-width:240px;">
+            <select name="role" class="form-input" style="max-width:180px;">
+                <option value="">All Roles</option>
+                {% for val, label in role_choices %}
+                <option value="{{ val }}" {% if current_role == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select name="status" class="form-input" style="max-width:140px;">
+                <option value="">All Status</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+            <noscript><button type="submit" class="btn btn--secondary">Filter</button></noscript>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Staff Name</th>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>System Role</th>
+                    <th>Assigned Laboratory</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="user-tbody">
+                {% include "users/partials/_user_list_rows.html" %}
+            </tbody>
+        </table>
+        {% include "partials/_pagination.html" %}
+    </div>
+</div>
+{% endblock %}

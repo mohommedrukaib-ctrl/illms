@@ -1,6 +1,11 @@
 """
 SmartSelect widget & SmartModelChoiceField — text input with server-driven type-ahead.
 No <select> dropdowns. Accepts both UUID selection and text resolution.
+
+Supports 3-tier fallback for JS-disabled browsers:
+  1. Native HTML5 <datalist> suggestions
+  2. Standalone "Browse list ->" picker page
+  3. Server-side text resolution
 """
 import uuid
 from django import forms
@@ -73,10 +78,15 @@ class SmartSelect(forms.Widget):
         if kind is None:
             raise ValueError(f"SmartSelect kind '{self.kind_key}' is not registered.")
 
-        datalist_items = list(smart_search(kind, "", limit=25))
+        datalist_items = list(smart_search(kind, "", limit=30))
 
         selected_display = ""
         selected_code = ""
+
+        # Check if prefilled via attributes (e.g. returning from Picker page in JS-off mode)
+        final_attrs = context["widget"]["attrs"]
+        prefill_display = final_attrs.get("data-prefill-display", "")
+
         if value:
             if isinstance(value, kind.queryset_fn().model):
                 selected_display = kind.display_fn(value)
@@ -97,10 +107,15 @@ class SmartSelect(forms.Widget):
                         if obj:
                             selected_display = kind.display_fn(obj)
                             selected_code = kind.code_fn(obj)
+                        else:
+                            selected_display = prefill_display or val_str
                     except Exception:
-                        selected_display = val_str
+                        selected_display = prefill_display or val_str
                 else:
                     selected_display = val_str
+
+        if not selected_display and prefill_display:
+            selected_display = prefill_display
 
         try:
             results_url = reverse("core:smart_select_results", args=[self.kind_key])
@@ -119,7 +134,6 @@ class SmartSelect(forms.Widget):
             except Exception:
                 create_url = ""
 
-        final_attrs = context["widget"]["attrs"]
         input_id = final_attrs.get("id") or f"id_{name}"
 
         context["widget"].update({

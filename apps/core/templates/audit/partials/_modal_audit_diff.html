@@ -1,0 +1,53 @@
+{% load ilims_tags %}
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" data-close-on-backdrop="1">
+    <div class="modal modal--lg" role="document">
+        <div class="modal__header">
+            <h2 class="modal__title">{{ modal_title }}</h2>
+            <button type="button" class="modal__close" data-close-modal>{% icon "close" "20" %}</button>
+        </div>
+
+        <div class="modal__body">
+            <div class="d-grid gap-md mb-md" style="grid-template-columns: 1fr 1fr;">
+                <div>
+                    <span class="text-xs text-uppercase text-muted d-block">Timestamp</span>
+                    <strong class="text-sm">{{ log.timestamp|date:"d F Y, H:i:s.u" }}</strong>
+                </div>
+                <div>
+                    <span class="text-xs text-uppercase text-muted d-block">Operator / User</span>
+                    <strong class="text-sm">{{ log.user.get_full_name|default:"SYSTEM" }} ({{ log.user.username|default:"SYSTEM" }})</strong>
+                </div>
+                <div>
+                    <span class="text-xs text-uppercase text-muted d-block">Target Entity</span>
+                    <code class="text-mono text-brand">{{ log.model_name }} [{{ log.record_id }}]</code>
+                </div>
+                <div>
+                    <span class="text-xs text-uppercase text-muted d-block">Action Performed</span>
+                    <span class="pill pill--brand">{{ log.action }}</span>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="mb-md">
+                <span class="text-xs text-uppercase text-muted d-block mb-xs">Cryptographic Chain Verification</span>
+                <div class="p-sm bg-card-hover border rounded text-xs">
+                    <div><strong>Previous Hash:</strong> <code class="text-mono text-muted">{{ log.previous_hash }}</code></div>
+                    <div class="mt-xs"><strong>Current Hash:</strong> <code class="text-mono text-brand">{{ log.hash }}</code></div>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div>
+                <span class="text-xs text-uppercase text-muted d-block mb-xs">Payload Diffs / Changes</span>
+                <div class="p-sm border rounded bg-card-hover">
+                    <pre class="text-mono text-xs" style="white-space: pre-wrap; margin:0;">{{ log.changes|pprint }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal__footer">
+            <button type="button" class="btn btn--secondary" data-close-modal>Close</button>
+        </div>
+    </div>
+</div>

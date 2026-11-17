@@ -6,6 +6,7 @@
 {% block content %}
 <div class="page-header">
     <div class="page-header__left">
+
         {% if page_icon %}
         <div class="page-header__icon">
             {% icon page_icon "24" %}
@@ -19,19 +20,44 @@
 </div>
 
 <!-- Real-time KPI cards -->
+=======
+        <div class="page-header__icon">{% icon "dashboard" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right d-flex gap-sm">
+        <a href="{% url 'core:sample_create' %}"
+           class="btn btn--primary"
+           hx-get="{% url 'core:sample_create' %}?modal=1"
+           hx-target="#modal-host" hx-swap="innerHTML">
+            {% icon "plus" "18" %} Intake Sample
+        </a>
+    </div>
+</div>
+
+<!-- Row 1: KPI Stat Cards -->
+
 <div class="stat-cards">
     <div class="stat-card stat-card--brand">
         <div class="stat-card__icon">{% icon "sample" "24" %}</div>
         <div class="stat-card__content">
             <div class="stat-card__label">Active Samples</div>
+
             <div class="stat-card__value">{{ stats.active_samples|default:"0" }}</div>
             <div class="stat-card__sub">Currently in progress</div>
+=======
+            <div class="stat-card__value">{{ stats.active_samples }}</div>
+            <div class="stat-card__sub">In pipeline</div>
+
         </div>
     </div>
     <div class="stat-card stat-card--warn">
         <div class="stat-card__icon">{% icon "flask" "24" %}</div>
         <div class="stat-card__content">
             <div class="stat-card__label">Testing & Analysis</div>
+
             <div class="stat-card__value">{{ stats.needs_qc|default:"0" }}</div>
             <div class="stat-card__sub">Requires laboratory action</div>
         </div>
@@ -42,17 +68,35 @@
             <div class="stat-card__label">Total Clients</div>
             <div class="stat-card__value">{{ stats.total_clients|default:"0" }}</div>
             <div class="stat-card__sub">Registered in system</div>
+=======
+            <div class="stat-card__value">{{ stats.testing_count }}</div>
+            <div class="stat-card__sub">Under bench testing</div>
+
         </div>
     </div>
     <div class="stat-card stat-card--ok">
         <div class="stat-card__icon">{% icon "check" "24" %}</div>
         <div class="stat-card__content">
             <div class="stat-card__label">Tests This Month</div>
+
             <div class="stat-card__value">{{ stats.monthly_tests|default:"0" }}</div>
             <div class="stat-card__sub">Assays run</div>
+=======
+            <div class="stat-card__value">{{ stats.monthly_tests }}</div>
+            <div class="stat-card__sub">Molecular runs completed</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--info">
+        <div class="stat-card__icon">{% icon "client" "24" %}</div>
+        <div class="stat-card__content">
+            <div class="stat-card__label">Registered Clients</div>
+            <div class="stat-card__value">{{ stats.total_clients }}</div>
+            <div class="stat-card__sub">Commercial & regional accounts</div>
+
         </div>
     </div>
 </div>
+
 
 <div class="layout-two-col mt-lg">
     <!-- Left Column: Recent Activity -->
@@ -122,5 +166,182 @@
             </div>
         </div>
     </div>
+=======
+<!-- Row 2: Main Layout (Wide Left / Stacked Right) -->
+<div class="layout-two-col">
+
+    <!-- LEFT COLUMN: Charts & Recent Activity -->
+    <div>
+        <!-- Chart Card 1: Pure SVG Monthly Sample Intake Throughput -->
+        <div class="card mb-lg">
+            <div class="card__header d-flex justify-between items-center">
+                <div>
+                    <div class="card__title">Sample Intake Throughput (Last 6 Months)</div>
+                    <div class="card__subtitle">Server-rendered vector graphic (100% CSP compliant, zero JS)</div>
+                </div>
+                <span class="pill pill--brand">Monthly Volume</span>
+            </div>
+            <div class="card__body text-center">
+                <svg viewBox="0 0 500 160" class="w-full" style="max-height: 180px; overflow: visible;">
+                    <!-- Baseline Grid Lines -->
+                    <line x1="20" y1="30" x2="480" y2="30" stroke="var(--border-color)" stroke-dasharray="3 3" stroke-width="1" />
+                    <line x1="20" y1="80" x2="480" y2="80" stroke="var(--border-color)" stroke-dasharray="3 3" stroke-width="1" />
+                    <line x1="20" y1="130" x2="480" y2="130" stroke="var(--border-color-strong)" stroke-width="1.5" />
+
+                    <!-- Bars & Labels -->
+                    {% for bar in chart_bars %}
+                    <g>
+                        <!-- Rounded Bar -->
+                        <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}"
+                              rx="4" ry="4" fill="var(--brand)" opacity="0.9">
+                            <title>{{ bar.label }}: {{ bar.count }} samples</title>
+                        </rect>
+                        <!-- Value Label above bar -->
+                        <text x="{{ bar.x|add:19 }}" y="{{ bar.y|add:-6 }}" text-anchor="middle"
+                              font-size="11" font-weight="700" fill="var(--text-primary)">
+                            {{ bar.count }}
+                        </text>
+                        <!-- Month Name below baseline -->
+                        <text x="{{ bar.x|add:19 }}" y="148" text-anchor="middle"
+                              font-size="11" font-weight="600" fill="var(--text-secondary)">
+                            {{ bar.label }}
+                        </text>
+                    </g>
+                    {% endfor %}
+                </svg>
+            </div>
+        </div>
+
+        <!-- Chart Card 2: Pathogen Detections Distribution -->
+        <div class="card mb-lg">
+            <div class="card__header">
+                <div class="card__title">Top Identified Foodborne Pathogens</div>
+                <div class="card__subtitle">Total confirmed positive detections: {{ total_detections }}</div>
+            </div>
+            <div class="card__body">
+                {% if top_pathogens %}
+                    {% for p in top_pathogens %}
+                    <div class="mb-md">
+                        <div class="d-flex justify-between text-sm mb-xs">
+                            <span><strong>{{ p.name }}</strong> <code class="text-xs">({{ p.code }})</code></span>
+                            <span class="text-muted">{{ p.count }} cases ({{ p.percent }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress__bar progress__bar--danger" style="width: {{ p.percent }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state p-md text-sm text-muted">No confirmed positive pathogens recorded yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Registered Samples -->
+        <div class="card">
+            <div class="card__header d-flex justify-between items-center">
+                <div class="card__title">Recent Intake Samples</div>
+                <a href="{% url 'core:sample_list' %}" class="btn btn--ghost btn--sm">View all →</a>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Sample Code</th>
+                            <th>Product Name</th>
+                            <th>Client</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in recent_samples %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'core:sample_detail' s.pk %}" class="text-bold text-brand">
+                                    <code class="text-mono">{{ s.code }}</code>
+                                </a>
+                            </td>
+                            <td>{{ s.product_name }}</td>
+                            <td class="text-xs text-muted">{{ s.client.name|truncatechars:20 }}</td>
+                            <td><span class="pill pill--{{ s.state_color }}">{{ s.get_workflow_state_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center p-md text-muted">No samples registered yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stacked Action & Alert Sidecards -->
+    <div>
+        <!-- Sidecard 1: Today's Reminders -->
+        <div class="card mb-md">
+            <div class="card__header d-flex justify-between items-center">
+                <div class="card__title">Today's Deadlines</div>
+                <a href="{% url 'core:reminders_list' %}" class="text-xs text-brand text-bold">All →</a>
+            </div>
+            <div class="card__body p-sm">
+                {% for rem in today_reminders %}
+                <div class="p-sm mb-xs border rounded bg-card-hover">
+                    <div class="d-flex justify-between items-center">
+                        <span class="pill pill--{{ rem.kind_color }} text-xs">{{ rem.get_kind_display }}</span>
+                        <span class="text-xs text-muted">{{ rem.assigned_to.get_short_name|default:"Unassigned" }}</span>
+                    </div>
+                    <div class="text-sm text-bold mt-xs">{{ rem.title }}</div>
+                </div>
+                {% empty %}
+                <div class="text-xs text-muted text-center p-sm">✓ No pending deadlines today.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sidecard 2: Overdue Action Items -->
+        <div class="card mb-md">
+            <div class="card__header">
+                <div class="card__title text-danger">⚠️ Overdue Samples</div>
+            </div>
+            <div class="card__body p-sm">
+                {% for ov in overdue_samples %}
+                <div class="p-sm mb-xs border rounded" style="border-left: 3px solid var(--danger);">
+                    <div class="d-flex justify-between items-center">
+                        <a href="{% url 'core:sample_detail' ov.pk %}" class="text-bold text-danger">
+                            <code>{{ ov.code }}</code>
+                        </a>
+                        <span class="text-xs text-muted">Due: {{ ov.due_date|date:"d M" }}</span>
+                    </div>
+                    <div class="text-xs text-muted mt-xs">{{ ov.product_name }} · {{ ov.client.name }}</div>
+                </div>
+                {% empty %}
+                <div class="text-xs text-muted text-center p-sm">✓ No samples are overdue!</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sidecard 3: Recent Detections Alert -->
+        <div class="card">
+            <div class="card__header">
+                <div class="card__title">Recent Pathogen Alerts</div>
+            </div>
+            <div class="card__body p-sm">
+                {% for det in recent_detections %}
+                <div class="p-sm mb-xs border rounded bg-card-hover">
+                    <div class="d-flex justify-between items-center">
+                        <strong class="text-danger text-xs">⚠️ {{ det.microorganism.name }}</strong>
+                        <span class="text-xs text-muted">Ct: {{ det.ct_value|default:"POS" }}</span>
+                    </div>
+                    <div class="text-xs text-muted mt-xs">
+                        Sample: <a href="{% url 'core:sample_detail' det.test.sample_id %}" class="text-brand">{{ det.test.sample.code }}</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-xs text-muted text-center p-sm">No positive detections recorded.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
 </div>
 {% endblock %}

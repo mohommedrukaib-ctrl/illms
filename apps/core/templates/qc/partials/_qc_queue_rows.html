@@ -1,0 +1,57 @@
+{% load ilims_tags %}
+{% if records %}
+    {% for r in records %}
+    <tr>
+        <td><code class="text-mono">{{ r.code }}</code></td>
+        <td>
+            <a href="{% url 'core:sample_detail' r.sample_id %}" class="text-brand text-bold">
+                {{ r.sample.code }}
+            </a>
+        </td>
+        <td>{{ r.sample.client.name|truncatechars:20 }}</td>
+        <td>{{ r.sample.product_name|truncatechars:20 }}</td>
+        <td>
+            <span class="pill pill--brand">
+                {{ r.sample.requested_test.name|default:"GENERAL" }}
+            </span>
+        </td>
+        <td>
+            <span class="pill pill--info">
+                {{ r.sample.attached_tests.count }} test{{ r.sample.attached_tests.count|pluralize }}
+            </span>
+        </td>
+        <td>
+            <span class="pill pill--{{ r.decision_color }}">{{ r.get_decision_display }}</span>
+        </td>
+        <td>
+            {% if r.decision == 'APPROVED' %}
+                <span class="pill pill--{{ r.safety_color }}">{{ r.get_safety_class_display }}</span>
+            {% else %}
+                <span class="text-muted text-xs">—</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if r.reviewer %}
+                {{ r.reviewer.get_short_name }}
+                <div class="text-xs text-muted">{{ r.reviewed_at|date:"Y-m-d H:i" }}</div>
+            {% else %}
+                <span class="text-muted text-xs">Awaiting review</span>
+            {% endif %}
+        </td>
+        <td class="text-right">
+            <a href="{% url 'core:qc_review' r.pk %}"
+               class="btn btn--primary btn--sm"
+               hx-get="{% url 'core:qc_review' r.pk %}?modal=1"
+               hx-target="#modal-host" hx-swap="innerHTML">
+                {% if r.decision == 'PENDING' %}Review{% else %}View{% endif %}
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="10" class="text-center p-lg text-muted">
+            No QC records match your filters.
+        </td>
+    </tr>
+{% endif %}

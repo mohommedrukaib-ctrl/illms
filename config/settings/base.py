@@ -1,15 +1,19 @@
 """
 ILIMS — Base Settings
-Shared across dev and prod. Never used directly.
+Shared across dev and prod.
 """
 import os
 from pathlib import Path
+import dj_database_url
 
 # ──────────────────────────────────────────────
 # PATHS
 # ──────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = BASE_DIR / "apps"
+
+# Ensure logs directory exists for local logging
+(BASE_DIR / "logs").mkdir(exist_ok=True)
 
 # ──────────────────────────────────────────────
 # CORE DJANGO
@@ -19,9 +23,13 @@ SECRET_KEY = os.environ.get(
     "INSECURE-change-me-before-deployment-this-is-50-chars-placeholder-xyz",
 )
 
-DEBUG = False
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", ".vercel.app,127.0.0.1,localhost").split(",")
+    if host.strip()
+]
 
 # ──────────────────────────────────────────────
 # APPLICATIONS
@@ -55,9 +63,6 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # ──────────────────────────────────────────────
 # MIDDLEWARE
 # ──────────────────────────────────────────────
-# ──────────────────────────────────────────────
-# MIDDLEWARE
-# ──────────────────────────────────────────────
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -71,23 +76,17 @@ MIDDLEWARE = [
     "django_htmx.middleware.HtmxMiddleware",
     "csp.middleware.CSPMiddleware",
     "apps.accounts.middleware.SessionIdleTimeoutMiddleware",
-    # "apps.accounts.middleware.TwoFactorEnforcementMiddleware",  # Disabled for dev
+    "apps.accounts.middleware.PasswordExpiryMiddleware",
     "apps.core.middleware.NoCacheMiddleware",
     "apps.core.middleware.FeatureFlagMiddleware",
     "axes.middleware.AxesMiddleware",
 ]
 
 # ──────────────────────────────────────────────
-# ILIMS CUSTOM
+# URLS & TEMPLATES
 # ──────────────────────────────────────────────
-# Set to empty list to disable mandatory 2FA setup for all roles
-ROLES_REQUIRING_2FA = []
-
 ROOT_URLCONF = "config.urls"
 
-# ──────────────────────────────────────────────
-# TEMPLATES
-# ──────────────────────────────────────────────
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -111,23 +110,35 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # ──────────────────────────────────────────────
-# DATABASE — PostgreSQL 17 with psycopg 3
+# DATABASE — PostgreSQL
 # ──────────────────────────────────────────────
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "ilims_db"),
-        "USER": os.environ.get("DB_USER", "ilims_user"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "ilims_password"),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-        "CONN_MAX_AGE": 600,
-        "CONN_HEALTH_CHECKS": True,
-        "OPTIONS": {
-            "connect_timeout": 10,
-        },
+if os.environ.get("DATABASE_URL"):
+    # Cloud database URL (Neon, Supabase, Vercel Postgres, etc.)
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,
+        )
     }
-}
+else:
+    # Local PostgreSQL database
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME", "ilims_db"),
+            "USER": os.environ.get("DB_USER", "ilims_user"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", "ilims_password"),
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+            "CONN_MAX_AGE": 600,
+            "CONN_HEALTH_CHECKS": True,
+            "OPTIONS": {
+                "connect_timeout": 10,
+            },
+        }
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -144,7 +155,7 @@ AUTHENTICATION_BACKENDS = [
     "apps.accounts.backends.EmailOrUsernameBackend",
 ]
 
-# Argon2id password hashing
+# Password hashing
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
@@ -180,7 +191,7 @@ OTP_TOTP_ISSUER = "ILIMS Food Safety"
 # ──────────────────────────────────────────────
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_AGE = 3600  # 1 hour max
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Strict"
 SESSION_COOKIE_NAME = "ilims_session"
@@ -190,25 +201,28 @@ SESSION_IDLE_TIMEOUT = int(os.environ.get("SESSION_IDLE_TIMEOUT", 1800))
 # ──────────────────────────────────────────────
 # CSRF
 # ──────────────────────────────────────────────
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_NAME = "ilims_csrf"
 CSRF_TRUSTED_ORIGINS = [
     o.strip()
-    for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "http://localhost:8000").split(",")
+    for o in os.environ.get(
+        "CSRF_TRUSTED_ORIGINS", 
+        "http://localhost:8000,http://127.0.0.1:8000,https://*.vercel.app"
+    ).split(",")
     if o.strip()
 ]
 
 # ──────────────────────────────────────────────
-# CONTENT SECURITY POLICY (django-csp 4.x)
+# CONTENT SECURITY POLICY
 # ──────────────────────────────────────────────
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": ("'self'",),
-        "script-src": ("'self'",),
-        "style-src": ("'self'", "'unsafe-inline'",),
-        "img-src": ("'self'", "data:",),
+        "script-src": ("'self'", "'unsafe-inline'"),
+        "style-src": ("'self'", "'unsafe-inline'"),
+        "img-src": ("'self'", "data:"),
         "font-src": ("'self'",),
         "connect-src": ("'self'",),
         "frame-ancestors": ("'none'",),
@@ -233,20 +247,21 @@ USE_I18N = True
 USE_TZ = True
 
 # ──────────────────────────────────────────────
-# STATIC FILES (WhiteNoise)
+# STATIC & MEDIA FILES (WhiteNoise)
 # ──────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
-# ──────────────────────────────────────────────
-# MEDIA / UPLOADS
-# ──────────────────────────────────────────────
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 UPLOAD_ROOT = BASE_DIR / "uploads"
@@ -297,17 +312,17 @@ LOGGING = {
         },
     },
     "root": {
-        "handlers": ["console", "file"],
+        "handlers": ["console"] if DEBUG else ["console", "file"],
         "level": "INFO",
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"] if DEBUG else ["console", "file"],
             "level": "WARNING",
             "propagate": False,
         },
         "apps": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"] if DEBUG else ["console", "file"],
             "level": "INFO",
             "propagate": False,
         },

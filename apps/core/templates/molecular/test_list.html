@@ -43,8 +43,12 @@
     </div>
     <div class="table-container">
         <table class="table">
+
             <thead><tr><th>Code</th><th>Sample</th><th>Method</th><th>Target</th><th>Date</th><th>Detection</th><th>Status</th><th></th></tr></thead>
             <!-- The tbody that gets swapped by live Ajax -->
+=======
+            <thead><tr><th>Code</th><th>Sample</th><th>Type</th><th>Target</th><th>Date</th><th>Detection</th><th class="text-right">Actions</th></tr></thead>  
+
             <tbody id="test-tbody">{% include "molecular/partials/_test_list_rows.html" %}</tbody>
         </table>
     </div>

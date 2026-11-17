@@ -1,0 +1,34 @@
+{% load ilims_tags %}
+{% if batches %}
+    {% for b in batches %}
+    <tr>
+        <td><a href="{% url 'core:batch_detail' b.pk %}" class="text-brand text-bold"><code class="text-mono">{{ b.code }}</code></a></td>
+        <td><strong>{{ b.batch_number }}</strong></td>
+        <td>{{ b.client.name }}</td>
+        <td>{{ b.product_name|default:"—" }}</td>
+        <td>{{ b.production_date|date:"Y-m-d"|default:"—" }}</td>
+        <td><span class="pill pill--info">{{ b.sample_count }} sample{{ b.sample_count|pluralize }}</span></td>
+        <td class="text-right">
+            <div class="d-flex gap-xs justify-end">
+                <a href="{% url 'core:batch_detail' b.pk %}" class="btn btn--ghost btn--sm" title="View">{% icon "search" "16" %}</a>
+                <a href="{% url 'core:batch_create' %}?edit={{ b.pk }}"
+                   class="btn btn--ghost btn--sm"
+                   hx-get="{% url 'core:batch_create' %}?modal=1&edit={{ b.pk }}"
+                   hx-target="#modal-host" hx-swap="innerHTML" title="Edit">
+                    {% icon "settings" "16" %}
+                </a>
+                <form method="post" action="{% url 'core:soft_delete' %}" style="display:inline;"
+                      onsubmit="return confirm('Move batch {{ b.code }} to Recycle Bin?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="model" value="food_batch">
+                    <input type="hidden" name="id" value="{{ b.pk }}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);" title="Delete">{% icon "close" "16" %}</button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr><td colspan="7" class="text-center p-lg text-muted">No batches found.</td></tr>
+{% endif %}

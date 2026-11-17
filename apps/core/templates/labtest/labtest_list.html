@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}Laboratory Workbench — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "flask" "24" %}</div>
+        <div class="page-header__text">
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+    </div>
+    <div class="page-header__right">
+        <a href="{% url 'core:sample_create' %}?next={{ request.path|urlencode }}"
+           class="btn btn--primary"
+           hx-get="{% url 'core:sample_create' %}?modal=1&next={{ request.path|urlencode }}"
+           hx-target="#modal-host"
+           hx-swap="innerHTML">
+            {% icon "plus" "18" %} Intake Sample
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card__header">
+        <form method="get" class="filters-bar w-full m-0 p-0" style="border:none;background:transparent;"
+              hx-get="{% url 'core:labtest_list' %}"
+              hx-target="#labtest-tbody"
+              hx-trigger="input delay:400ms from:input[type='search'], change from:select"
+              hx-swap="innerHTML"
+              hx-push-url="true"
+              hx-indicator="#search-loader">
+
+            <input type="search" name="q" class="form-input"
+                   placeholder="Search Sample ID, product, client, requested test…"
+                   value="{{ current_q }}" style="max-width:320px;">
+
+            <select name="state" class="form-input" style="max-width:220px;">
+                <option value="">All active workflow stages</option>
+                {% for val, label in state_choices %}
+                <option value="{{ val }}" {% if current_state == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <noscript><button type="submit" class="btn btn--secondary">Filter</button></noscript>
+            <div id="search-loader" class="htmx-indicator ml-sm">{% icon "loader" "18" %}</div>
+        </form>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sample ID</th>
+                    <th>Client Name</th>
+                    <th>Product / Specimen</th>
+                    <th>Primary Requested Test</th>
+                    <th>Received Date</th>
+                    <th>Stage</th>
+                    <th>Test Runs</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="labtest-tbody">
+                {% include "labtest/partials/_labtest_list_rows.html" %}
+            </tbody>
+        </table>
+        <div id="pagination-wrapper">
+            {% include "partials/_pagination.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}  

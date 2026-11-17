@@ -22,10 +22,17 @@
                aria-expanded="false"
                list="{{ widget.input_id }}__datalist"
                hx-get="{{ widget.results_url }}?field={{ widget.name }}&input_id={{ widget.input_id }}"
+
 hx-trigger="keyup changed delay:180ms, focus"
 hx-target="#{{ widget.input_id }}__results"
 hx-swap="innerHTML"
 hx-include="this">
+=======
+               hx-trigger="keyup changed delay:180ms, focus"
+               hx-target="#{{ widget.input_id }}__results"
+               hx-swap="innerHTML"
+               hx-include="closest form">
+
 
         <datalist id="{{ widget.input_id }}__datalist">
             {% for item in widget.datalist_items %}
@@ -44,12 +51,19 @@ hx-include="this">
            class="smart-select__link">
             {% icon "search" "14" %} Browse list →
         </a>
+
         {% if widget.allow_create %}
         <a href="{{ widget.create_url }}?next={{ widget.next_url|urlencode }}"
            class="smart-select__link smart-select__link--create"
            hx-get="{{ widget.create_url }}?modal=1"
            hx-target="#modal-host"
            hx-swap="innerHTML">
+=======
+                {% if widget.allow_create %}
+        <!-- Redirect to full creation page to prevent nested modal collisions -->
+        <a href="{{ widget.create_url }}?next={{ widget.next_url|urlencode }}"
+           class="smart-select__link smart-select__link--create">
+
             {% icon "plus" "14" %} Add new {{ widget.kind_label|lower }}
         </a>
         {% endif %}

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load ilims_tags %}
 
+
 {% block content %}
 <!-- Content identical to previous, but add this specific print stylesheet -->
 <style>
@@ -21,5 +22,158 @@
         .page-header, .app-sidebar, .topbar { display: none !important; }
     }
     {% endif %}
+=======
+{% block title %}Receipt {{ sample.code }} — {{ ILIMS_TITLE }}{% endblock %}
+
+{% block content %}
+<!-- Screen Actions Header (Hidden when printing) -->
+<div class="page-header print-hide">
+    <div class="page-header__left">
+        <div class="page-header__icon">{% icon "print" "24" %}</div>
+        <div class="page-header__text">
+            <h1>Sample Intake Receipt · <code class="text-mono">{{ sample.code }}</code></h1>
+            <p>Official laboratory intake voucher for client and container labeling</p>
+        </div>
+    </div>
+    <div class="page-header__right d-flex gap-sm">
+        <button type="button" class="btn btn--primary" data-action="print">
+            {% icon "print" "18" %} Print Receipt
+        </button>
+        <a href="{% url 'core:sample_detail' sample.pk %}" class="btn btn--secondary">
+            View Sample Details
+        </a>
+        <a href="{% url 'core:sample_list' %}" class="btn btn--ghost">
+            ← Back to Samples
+        </a>
+    </div>
+</div>
+
+<!-- Printable Receipt Card Container -->
+<div class="card max-w-lg mx-auto" id="printable-receipt">
+    <div class="card__body p-lg">
+
+        <!-- Receipt Header -->
+        <div class="d-flex justify-between items-start border-bottom pb-md mb-md">
+            <div>
+                <h2 class="text-xl text-bold text-brand m-0">{{ system_settings.organization_name|default:"ILIMS Laboratory Corporation" }}</h2>
+                <div class="text-xs text-secondary mt-xs">
+                    {{ sample.laboratory.name|default:"Central Food Safety & Diagnostic Laboratory" }}
+                </div>
+                <div class="text-xs text-muted">
+                    {{ sample.laboratory.address|default:"" }}
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="qr-display mb-xs">
+                    {{ qr_svg|safe }}
+                </div>
+                <div class="text-xs text-mono text-bold text-brand">{{ sample.tracking_code }}</div>
+            </div>
+        </div>
+
+        <!-- Sample Identifiers Banner -->
+        <div class="p-sm bg-card-hover border rounded mb-md d-flex justify-between items-center">
+            <div>
+                <span class="text-xs text-uppercase text-muted d-block">Sample Code</span>
+                <code class="text-mono text-lg text-bold text-brand">{{ sample.code }}</code>
+            </div>
+            <div>
+                <span class="text-xs text-uppercase text-muted d-block">Intake Date</span>
+                <strong class="text-sm">{{ sample.received_date|date:"d F Y" }}</strong>
+            </div>
+            <div>
+                <span class="text-xs text-uppercase text-muted d-block">Target Due Date</span>
+                <strong class="text-sm">{{ sample.due_date|date:"d F Y"|default:"Standard SLA" }}</strong>
+            </div>
+        </div>
+
+        <!-- Client & Specimen Metadata -->
+        <div class="d-grid gap-md mb-md" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <h3 class="text-xs text-uppercase text-muted mb-xs">Client Information</h3>
+                <div class="text-sm"><strong>Company:</strong> {{ sample.client.name }}</div>
+                <div class="text-sm"><strong>Contact:</strong> {{ sample.client.contact_person|default:"—" }}</div>
+                <div class="text-sm"><strong>Phone:</strong> {{ sample.client.phone|default:"—" }}</div>
+                <div class="text-sm"><strong>Email:</strong> {{ sample.client.email|default:"—" }}</div>
+            </div>
+            <div>
+                <h3 class="text-xs text-uppercase text-muted mb-xs">Specimen Details</h3>
+                <div class="text-sm"><strong>Product / Name:</strong> {{ sample.product_name }}</div>
+                <div class="text-sm"><strong>Category:</strong> {{ sample.product_category.name|default:"—" }}</div>
+                <div class="text-sm"><strong>Product Type:</strong> {{ sample.product_type.name|default:"—" }}</div>
+                <div class="text-sm"><strong>Priority:</strong> {{ sample.get_priority_display }}</div>
+            </div>
+        </div>
+
+        <!-- Requested Test Method -->
+        <div class="p-sm border rounded mb-md">
+            <span class="text-xs text-uppercase text-muted d-block mb-xs">Requested Diagnostic Test</span>
+            <span class="pill pill--brand text-sm">
+                {{ sample.requested_test.name|default:"GENERAL DIAGNOSTIC TESTING" }}
+            </span>
+        </div>
+
+        <!-- Storage & Production Info -->
+        <div class="d-grid gap-md mb-md text-xs" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div>
+                <span class="text-muted d-block">Storage Condition</span>
+                <strong>{{ sample.get_storage_condition_display }}</strong>
+            </div>
+            <div>
+                <span class="text-muted d-block">Production Date</span>
+                <strong>{{ sample.production_date|date:"Y-m-d"|default:"—" }}</strong>
+            </div>
+            <div>
+                <span class="text-muted d-block">Expiry Date</span>
+                <strong>{{ sample.expiry_date|date:"Y-m-d"|default:"—" }}</strong>
+            </div>
+        </div>
+
+        {% if sample.remarks %}
+        <div class="p-sm border rounded bg-card-hover text-xs mb-md">
+            <strong>Remarks / Special Instructions:</strong> {{ sample.remarks }}
+        </div>
+        {% endif %}
+
+        <!-- Customer Tracking Instructions -->
+        <div class="p-sm border rounded text-xs mb-lg" style="background: var(--info-light); border-color: var(--info);">
+            <strong>🌐 Public Customer Portal Tracking Instructions:</strong><br>
+            You can track live analysis progress and download your official report at 
+            <code>/portal/</code> using your **Tracking ID** (<code>{{ sample.tracking_code }}</code>) 
+            and registered phone number (<code>{{ sample.client.phone }}</code>).
+        </div>
+
+        <!-- Signatures & Authorization -->
+        <div class="d-flex justify-between items-end mt-xl pt-lg border-top">
+            <div class="text-center" style="width: 200px;">
+                <div style="border-bottom: 1px solid var(--border-color-strong); height: 35px;"></div>
+                <div class="text-xs text-muted mt-xs">Sample Collector / Client</div>
+            </div>
+            <div class="text-center" style="width: 200px;">
+                <div style="border-bottom: 1px solid var(--border-color-strong); height: 35px;"></div>
+                <div class="text-xs text-muted mt-xs">Receiving Lab Officer</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Print Stylesheet -->
+<style>
+@media print {
+    body { background: white !important; color: black !important; }
+    .app-sidebar, .topbar, .app-footer, .print-hide, .page-header { display: none !important; }
+    .app-main { margin-left: 0 !important; }
+    .app-content { padding: 0 !important; }
+    #printable-receipt {
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
 </style>
 {% endblock %}

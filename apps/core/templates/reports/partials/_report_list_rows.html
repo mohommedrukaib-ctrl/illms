@@ -1,0 +1,21 @@
+{% load ilims_tags %}
+{% if reports %}
+    {% for r in reports %}
+    <tr>
+        <td><a href="{% url 'core:report_detail' r.pk %}" class="text-brand text-bold"><code class="text-mono">{{ r.code }}</code></a></td>
+        <td><a href="{% url 'core:sample_detail' r.sample_id %}">{{ r.sample.code }}</a></td>
+        <td>{{ r.client.name }}</td>
+        <td><span class="pill pill--{{ r.safety_color }}">{{ r.get_safety_class_display }}</span></td>
+        <td><span class="pill pill--{{ r.status_color }}">{{ r.get_status_display }}</span></td>
+        <td class="text-muted text-sm">{{ r.created_at|date:"Y-m-d" }}</td>
+        <td class="text-right">
+            <div class="d-flex gap-xs justify-end">
+                <a href="{% url 'core:report_detail' r.pk %}" class="btn btn--ghost btn--sm" title="View">{% icon "search" "16" %}</a>
+                <a href="{% url 'core:report_download' r.pk %}" class="btn btn--ghost btn--sm" title="Download PDF">{% icon "print" "16" %}</a>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr><td colspan="7" class="text-center p-lg text-muted">No reports yet.</td></tr>
+{% endif %}
