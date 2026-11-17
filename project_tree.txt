@@ -1,0 +1,159 @@
+﻿C:\ilims
+├── .qodo
+│   ├── agents
+│   └── workflows
+├── apps
+│   ├── accounts
+│   │   ├── migrations
+│   │   │   └── __init__.py
+│   │   ├── templates
+│   │   │   └── accounts
+│   │   │       ├── locked_out.html
+│   │   │       ├── login.html
+│   │   │       ├── login_2fa.html
+│   │   │       ├── logout_confirm.html
+│   │   │       ├── password_change.html
+│   │   │       ├── profile.html
+│   │   │       └── setup_2fa.html
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── backends.py
+│   │   ├── decorators.py
+│   │   ├── forms.py
+│   │   ├── managers.py
+│   │   ├── middleware.py
+│   │   ├── models.py
+│   │   ├── signals.py
+│   │   ├── urls.py
+│   │   ├── validators.py
+│   │   └── views.py
+│   ├── core
+│   │   ├── migrations
+│   │   │   └── __init__.py
+│   │   ├── templates
+│   │   │   ├── errors
+│   │   │   │   ├── 400.html
+│   │   │   │   ├── 403.html
+│   │   │   │   ├── 404.html
+│   │   │   │   └── 500.html
+│   │   │   ├── molecular
+│   │   │   │   ├── partials
+│   │   │   │   │   ├── _dna_list_rows.html
+│   │   │   │   │   ├── _microbe_list_rows.html
+│   │   │   │   │   ├── _modal_dna_form.html
+│   │   │   │   │   ├── _modal_microbe_form.html
+│   │   │   │   │   ├── _modal_test_form.html
+│   │   │   │   │   └── _test_list_rows.html
+│   │   │   │   ├── dna_detail.html
+│   │   │   │   ├── dna_form_page.html
+│   │   │   │   ├── dna_list.html
+│   │   │   │   ├── microbe_form_page.html
+│   │   │   │   ├── microbe_list.html
+│   │   │   │   ├── test_detail.html
+│   │   │   │   ├── test_form_page.html
+│   │   │   │   └── test_list.html
+│   │   │   ├── pages
+│   │   │   │   ├── placeholder.html
+│   │   │   │   ├── settings_hub.html
+│   │   │   │   ├── smart_picker.html
+│   │   │   │   └── smart_select_demo.html
+│   │   │   ├── partials
+│   │   │   │   ├── _footer.html
+│   │   │   │   ├── _messages.html
+│   │   │   │   ├── _modal_client_form.html
+│   │   │   │   ├── _modal_sample_form.html
+│   │   │   │   ├── _modal_sample_status.html
+│   │   │   │   ├── _modal_wrapper.html
+│   │   │   │   ├── _noscript.html
+│   │   │   │   ├── _sidebar.html
+│   │   │   │   ├── _smart_select_results.html
+│   │   │   │   ├── _theme_toggle.html
+│   │   │   │   ├── _toast.html
+│   │   │   │   └── _topbar.html
+│   │   │   ├── widgets
+│   │   │   │   └── smart_select.html
+│   │   │   ├── workflow
+│   │   │   │   ├── partials
+│   │   │   │   │   ├── _client_list_rows.html
+│   │   │   │   │   ├── _dna_section.html
+│   │   │   │   │   ├── _modal_client_form.html
+│   │   │   │   │   ├── _modal_sample_form.html
+│   │   │   │   │   ├── _modal_sample_status.html
+│   │   │   │   │   ├── _pcr_section.html
+│   │   │   │   │   ├── _sample_header_actions.html
+│   │   │   │   │   ├── _sample_list_rows.html
+│   │   │   │   │   ├── _seq_section.html
+│   │   │   │   │   └── _status_card.html
+│   │   │   │   ├── client_form_page.html
+│   │   │   │   ├── client_list.html
+│   │   │   │   ├── sample_detail.html
+│   │   │   │   ├── sample_form_page.html
+│   │   │   │   ├── sample_list.html
+│   │   │   │   ├── sample_receipt.html
+│   │   │   │   └── sample_status_page.html
+│   │   │   └── base.html
+│   │   ├── templatetags
+│   │   │   ├── __init__.py
+│   │   │   └── ilims_tags.py
+│   │   ├── __init__.py
+│   │   ├── apps.py
+│   │   ├── audit.py
+│   │   ├── context_processors.py
+│   │   ├── decorators.py
+│   │   ├── forms.py
+│   │   ├── forms_molecular.py
+│   │   ├── forms_workflow.py
+│   │   ├── middleware.py
+│   │   ├── mixins.py
+│   │   ├── models.py
+│   │   ├── smart_select.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   ├── views_molecular.py
+│   │   ├── views_workflow.py
+│   │   └── widgets.py
+│   └── __init__.py
+├── config
+│   ├── settings
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── dev.py
+│   │   └── prod.py
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── celery.py
+│   ├── urls.py
+│   └── wsgi.py
+├── logs
+│   └── ilims.log
+├── -p
+├── static
+│   ├── css
+│   │   ├── cards.css
+│   │   ├── components.css
+│   │   ├── design-system.css
+│   │   ├── forms.css
+│   │   ├── modals.css
+│   │   ├── sidebar.css
+│   │   ├── smart_select.css
+│   │   ├── tables.css
+│   │   ├── topbar.css
+│   │   └── utilities.css
+│   ├── img
+│   │   ├── favicon.svg
+│   │   └── logo.svg
+│   └── js
+│       ├── htmx.min.js
+│       └── ilims.js
+├── tatic
+│   └── css
+├── .env
+├── .env.example
+├── .gitignore
+├── manage.py
+├── project_tree.txt
+├── pyproject.toml
+├── README.md
+├── requirements.txt
+└── use
