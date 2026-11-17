@@ -31,27 +31,13 @@
 
 <div class="card">
     <div class="card__header">
-
         <form method="get" action="" class="filters-bar w-full m-0 p-0" style="border:none; background:transparent;">
             <input type="search" name="q" class="form-input"
                    placeholder="Search by name, code, phone, or email…"
                    value="{{ request.GET.q }}"
                    hx-get="{% url 'core:client_list' %}"
                    hx-trigger="keyup changed delay:400ms, search"
-                   hx-target="#client-tbody"
-=======
-        <form method="get" action="" class="filters-bar w-full m-0 p-0 border-0 bg-transparent">
-            <input type="search"
-                   name="q"
-                   class="form-input"
-                   placeholder="Search by name, code, phone, or email…"
-                   value="{{ request.GET.q }}"
-                   hx-get="{% url 'core:client_list' %}"
-                   hx-trigger="keyup delay:400ms changed, search"
-                   hx-target="#client-results"
-
-                   hx-swap="innerHTML"
-                   style="max-width: 320px;">
+                   hx-target="#client-tbody">
             <noscript>
                 <button type="submit" class="btn btn--secondary">Search</button>
             </noscript>
@@ -74,11 +60,6 @@
                 {% include "workflow/partials/_client_list_rows.html" %}
             </tbody>
         </table>
-=======
-
-    <div id="client-results">
-        {% include "workflow/partials/_client_list_results.html" %}
-
     </div>
 </div>
 {% endblock %}

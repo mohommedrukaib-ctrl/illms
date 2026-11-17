@@ -1,5 +1,3 @@
-
-=======
 {% load ilims_tags %}
 
 {% if clients %}
@@ -12,9 +10,6 @@
             <span class="text-xs text-muted">{{ c.email }}</span>
         </td>
 
-        <td>{{ c.region.name|default:"—" }}, {{ c.country.iso2 }}</td>
-        <td><span class="pill pill--ok">Active</span></td>
-=======
         <td>{{ c.phone|default:"—" }}</td>
         <td>{{ c.region.name|default:"—" }}, {{ c.country.iso2 }}</td>
         <td><span class="pill pill--ok">Active</span></td>
@@ -44,9 +39,6 @@
     {% endfor %}
 {% else %}
     <tr>
-
-        <td colspan="5" class="text-center p-lg text-muted">No clients found.</td>
-=======
         <td colspan="7" class="text-center p-lg text-muted">No clients found.</td>
 
     </tr>

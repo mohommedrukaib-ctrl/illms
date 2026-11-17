@@ -9,103 +9,53 @@
     </div>
 
     <nav class="sidebar__nav">
-
-        <!-- LABORATORY -->
-=======
         <!-- 1. LABORATORY -->
-
         <div class="sidebar__group">
             <span class="sidebar__group-title">Laboratory</span>
-            <a href="{% url 'core:dashboard' %}"
-               class="sidebar__link {% active_nav 'dashboard' %}">
+            <a href="{% url 'core:dashboard' %}" class="sidebar__link {% active_nav 'dashboard' %}">
                 {% icon "dashboard" %}
                 <span>Dashboard</span>
             </a>
-            <a href="{% url 'core:sample_list' %}"
-
-               class="sidebar__link {% active_nav 'sample_list' 'sample_create' 'sample_detail' %}">
-=======
-               class="sidebar__link {% active_nav 'sample_list' 'sample_create' 'sample_detail' 'sample_receipt' 'sample_test_attach' %}">
-
+            <a href="{% url 'core:sample_list' %}" class="sidebar__link {% active_nav 'sample_list' 'sample_create' 'sample_detail' 'sample_receipt' 'sample_test_attach' 'sample_advance' %}">
                 {% icon "sample" %}
                 <span>Samples</span>
             </a>
             {% if "module.batches"|feature %}
-
-            <a href="/batches/"
-               class="sidebar__link {% active_nav 'batches_list' %}">
-=======
-            <a href="{% url 'core:batch_list' %}"
-               class="sidebar__link {% active_nav 'batch_list' 'batch_create' 'batch_detail' %}">
-
+            <a href="{% url 'core:batch_list' %}" class="sidebar__link {% active_nav 'batch_list' 'batch_create' 'batch_detail' %}">
                 {% icon "batch" %}
                 <span>Batches</span>
             </a>
             {% endif %}
-            <a href="{% url 'core:client_list' %}"
-               class="sidebar__link {% active_nav 'client_list' 'client_create' %}">
+            <a href="{% url 'core:client_list' %}" class="sidebar__link {% active_nav 'client_list' 'client_create' %}">
                 {% icon "client" %}
                 <span>Clients</span>
             </a>
         </div>
 
-
-                {% if "module.dna_extraction"|feature or "module.pcr"|feature or "module.microorganism_id"|feature %}
-        <div class="sidebar__group">
-            <span class="sidebar__group-title">Molecular</span>
-            {% if "module.dna_extraction"|feature %}
-            <a href="{% url 'core:dna_list' %}"
-               class="sidebar__link {% active_nav 'dna_list' 'dna_create' 'dna_detail' %}">
-                {% icon "dna" %}
-                <span>DNA Extraction</span>
-            </a>
-            {% endif %}
-            {% if "module.pcr"|feature or "module.qpcr"|feature or "module.sequencing"|feature %}
-            <a href="{% url 'core:test_list' %}"
-               class="sidebar__link {% active_nav 'test_list' 'test_create' 'test_detail' %}">
-                {% icon "flask" %}
-                <span>PCR / qPCR Tests</span>
-=======
         <!-- 2. TESTING & DIAGNOSTICS -->
         {% if "module.lab_tests"|feature or "module.microorganism_id"|feature or "module.dna_extraction"|feature or "module.pcr"|feature %}
         <div class="sidebar__group">
             <span class="sidebar__group-title">Testing & Analysis</span>
             {% if "module.lab_tests"|feature %}
-            <a href="{% url 'core:labtest_list' %}"
-               class="sidebar__link {% active_nav 'labtest_list' 'labtest_create' 'labtest_detail' %}">
+            <a href="{% url 'core:labtest_list' %}" class="sidebar__link {% active_nav 'labtest_list' 'labtest_create' 'labtest_detail' %}">
                 {% icon "flask" %}
                 <span>Lab Tests</span>
-
             </a>
             {% endif %}
             {% if "module.microorganism_id"|feature %}
-            <a href="{% url 'core:microbe_list' %}"
-               class="sidebar__link {% active_nav 'microbe_list' 'microbe_create' %}">
+            <a href="{% url 'core:microbe_list' %}" class="sidebar__link {% active_nav 'microbe_list' 'microbe_create' %}">
                 {% icon "microbe" %}
                 <span>Microorganisms</span>
             </a>
             {% endif %}
-
-        </div>
-        {% endif %}
-
-        <!-- QUALITY -->
-        {% if "module.qc_approval"|feature %}
-        <div class="sidebar__group">
-            <span class="sidebar__group-title">Quality</span>
-            <a href="/qc/"
-               class="sidebar__link {% active_nav 'qc_queue' %}">
-=======
             {% if "module.dna_extraction"|feature %}
-            <a href="{% url 'core:dna_list' %}"
-               class="sidebar__link {% active_nav 'dna_list' 'dna_create' 'dna_detail' %}">
+            <a href="{% url 'core:dna_list' %}" class="sidebar__link {% active_nav 'dna_list' 'dna_create' 'dna_detail' %}">
                 {% icon "dna" %}
                 <span>DNA Extraction</span>
             </a>
             {% endif %}
             {% if "module.pcr"|feature %}
-            <a href="{% url 'core:test_list' %}"
-               class="sidebar__link {% active_nav 'test_list' 'test_create' 'test_detail' %}">
+            <a href="{% url 'core:test_list' %}" class="sidebar__link {% active_nav 'test_list' 'test_create' 'test_detail' %}">
                 {% icon "flask" %}
                 <span>PCR / qPCR Assays</span>
             </a>
@@ -117,51 +67,26 @@
         {% if "module.qc_approval"|feature %}
         <div class="sidebar__group">
             <span class="sidebar__group-title">Quality Control</span>
-            <a href="{% url 'core:qc_queue' %}"
-               class="sidebar__link {% active_nav 'qc_queue' 'qc_review' %}">
-
+            <a href="{% url 'core:qc_queue' %}" class="sidebar__link {% active_nav 'qc_queue' 'qc_review' %}">
                 {% icon "qc" %}
                 <span>QC Queue</span>
             </a>
         </div>
         {% endif %}
 
-
-        <!-- REPORTS -->
-        {% if "module.reports"|feature %}
-        <div class="sidebar__group">
-            <span class="sidebar__group-title">Reports</span>
-            <a href="/reports/"
-               class="sidebar__link {% active_nav 'reports_list' %}">
-                {% icon "report" %}
-                <span>Reports</span>
-            </a>
-        </div>
-        {% endif %}
-
-        <!-- RECORDS -->
-        <div class="sidebar__group">
-            <span class="sidebar__group-title">Records</span>
-            {% if "module.reminders"|feature %}
-            <a href="/reminders/"
-               class="sidebar__link {% active_nav 'reminders_list' %}">
-=======
         <!-- 4. REPORTS & COMPLIANCE -->
         {% if "module.reports"|feature %}
         <div class="sidebar__group">
             <span class="sidebar__group-title">Reports</span>
-            <a href="{% url 'core:reports_list' %}"
-               class="sidebar__link {% active_nav 'reports_list' 'report_detail' 'report_generate' %}">
+            <a href="{% url 'core:reports_list' %}" class="sidebar__link {% active_nav 'reports_list' 'report_detail' 'report_generate' %}">
                 {% icon "report" %}
                 <span>Reports</span>
             </a>
-            <a href="{% url 'core:detection_log' %}"
-               class="sidebar__link {% active_nav 'detection_log' %}">
+            <a href="{% url 'core:detection_log' %}" class="sidebar__link {% active_nav 'detection_log' %}">
                 {% icon "microbe" %}
                 <span>Detection Log</span>
             </a>
-            <a href="{% url 'core:qc_compliance_log' %}"
-               class="sidebar__link {% active_nav 'qc_compliance_log' %}">
+            <a href="{% url 'core:qc_compliance_log' %}" class="sidebar__link {% active_nav 'qc_compliance_log' %}">
                 {% icon "check" %}
                 <span>QC Compliance</span>
             </a>
@@ -173,56 +98,25 @@
         <div class="sidebar__group">
             <span class="sidebar__group-title">Records</span>
             {% if "module.reminders"|feature %}
-            <a href="{% url 'core:reminders_list' %}"
-               class="sidebar__link {% active_nav 'reminders_list' 'reminder_action' %}">
-
+            <a href="{% url 'core:reminders_list' %}" class="sidebar__link {% active_nav 'reminders_list' 'reminder_action' %}">
                 {% icon "reminder" %}
                 <span>Reminders</span>
             </a>
             {% endif %}
             {% if "module.notifications"|feature %}
-
-            <a href="/notifications/"
-=======
-            <a href="{% url 'core:notifications_list' %}"
-
-               class="sidebar__link {% active_nav 'notifications_list' %}">
+            <a href="{% url 'core:notifications_list' %}" class="sidebar__link {% active_nav 'notifications_list' %}">
                 {% icon "bell" %}
                 <span>Notifications</span>
             </a>
             {% endif %}
-
-            <a href="/audit/"
-               class="sidebar__link {% active_nav 'audit_list' %}">
-                {% icon "audit" %}
-                <span>Audit Trail</span>
-            </a>
-        </div>
-
-        <!-- SYSTEM -->
-        <div class="sidebar__group">
-            <span class="sidebar__group-title">System</span>
-            <a href="{% url 'core:settings_hub' %}"
-               class="sidebar__link {% active_nav 'settings_hub' %}">
-                {% icon "settings" %}
-                <span>Settings</span>
-            </a>
-            <a href="/users/"
-               class="sidebar__link {% active_nav 'users_list' %}">
-                {% icon "users" %}
-                <span>Users</span>
-            </a>
-=======
             {% if "module.audit_trail"|feature %}
-            <a href="{% url 'core:audit_list' %}"
-               class="sidebar__link {% active_nav 'audit_list' 'audit_detail' 'audit_verify' %}">
+            <a href="{% url 'core:audit_list' %}" class="sidebar__link {% active_nav 'audit_list' 'audit_detail' 'audit_verify' %}">
                 {% icon "audit" %}
                 <span>Audit Trail</span>
             </a>
             {% endif %}
             {% if "module.recycle_bin"|feature %}
-            <a href="{% url 'core:recycle_bin' %}"
-               class="sidebar__link {% active_nav 'recycle_bin' %}">
+            <a href="{% url 'core:recycle_bin' %}" class="sidebar__link {% active_nav 'recycle_bin' %}">
                 {% icon "close" %}
                 <span>Recycle Bin</span>
             </a>
@@ -234,32 +128,25 @@
         <div class="sidebar__group">
             <span class="sidebar__group-title">System</span>
             {% if "module.users"|feature %}
-            <a href="{% url 'core:users_list' %}"
-               class="sidebar__link {% active_nav 'users_list' 'user_create' 'user_reset_password' %}">
+            <a href="{% url 'core:users_list' %}" class="sidebar__link {% active_nav 'users_list' 'user_create' 'user_reset_password' %}">
                 {% icon "users" %}
                 <span>Users</span>
             </a>
             {% endif %}
-            <a href="{% url 'core:settings_hub' %}"
-               class="sidebar__link {% active_nav 'settings_hub' %}">
+            <a href="{% url 'core:settings_hub' %}" class="sidebar__link {% active_nav 'settings_hub' %}">
                 {% icon "settings" %}
                 <span>Settings Hub</span>
             </a>
-            <a href="{% url 'core:documentation' %}"
-               class="sidebar__link {% active_nav 'documentation' %}">
+            <a href="{% url 'core:documentation' %}" class="sidebar__link {% active_nav 'documentation' %}">
                 {% icon "report" %}
                 <span>User Manual</span>
             </a>
             {% if "module.customer_portal"|feature %}
-            <a href="{% url 'core:customer_portal' %}"
-               target="_blank"
-               class="sidebar__link"
-               title="Open Public Customer Tracking Portal in new window">
+            <a href="{% url 'core:customer_portal' %}" target="_blank" class="sidebar__link" title="Open Public Customer Tracking Portal">
                 {% icon "search" %}
                 <span>Customer Portal ↗</span>
             </a>
             {% endif %}
-
         </div>
     </nav>
 

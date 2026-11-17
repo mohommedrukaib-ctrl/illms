@@ -5,7 +5,7 @@ from .base import *  # noqa: F401, F403
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", ".vercel.app"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", ".vercel.app", "testserver"]
 
 # Relax security for local development
 SESSION_COOKIE_SECURE = False

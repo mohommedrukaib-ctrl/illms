@@ -22,17 +22,10 @@
                aria-expanded="false"
                list="{{ widget.input_id }}__datalist"
                hx-get="{{ widget.results_url }}?field={{ widget.name }}&input_id={{ widget.input_id }}"
-
-hx-trigger="keyup changed delay:180ms, focus"
-hx-target="#{{ widget.input_id }}__results"
-hx-swap="innerHTML"
-hx-include="this">
-=======
                hx-trigger="keyup changed delay:180ms, focus"
                hx-target="#{{ widget.input_id }}__results"
                hx-swap="innerHTML"
                hx-include="closest form">
-
 
         <datalist id="{{ widget.input_id }}__datalist">
             {% for item in widget.datalist_items %}
@@ -47,23 +40,15 @@ hx-include="this">
          aria-label="{{ widget.kind_label }} suggestions"></div>
 
     <div class="smart-select__actions">
-        <a href="{{ widget.picker_url }}?field={{ widget.name }}&amp;next={{ widget.next_url|urlencode }}"
+        <a href="{{ widget.picker_url }}?field={{ widget.name }}&next={{ widget.next_url|urlencode }}"
            class="smart-select__link">
             {% icon "search" "14" %} Browse list →
         </a>
 
         {% if widget.allow_create %}
-        <a href="{{ widget.create_url }}?next={{ widget.next_url|urlencode }}"
-           class="smart-select__link smart-select__link--create"
-           hx-get="{{ widget.create_url }}?modal=1"
-           hx-target="#modal-host"
-           hx-swap="innerHTML">
-=======
-                {% if widget.allow_create %}
         <!-- Redirect to full creation page to prevent nested modal collisions -->
         <a href="{{ widget.create_url }}?next={{ widget.next_url|urlencode }}"
            class="smart-select__link smart-select__link--create">
-
             {% icon "plus" "14" %} Add new {{ widget.kind_label|lower }}
         </a>
         {% endif %}
@@ -72,7 +57,7 @@ hx-include="this">
     <noscript>
         <p class="smart-select__hint">
             JavaScript is off. Type the full {{ widget.kind_label|lower }} name and submit,
-            or use <a href="{{ widget.picker_url }}?field={{ widget.name }}&amp;next={{ widget.next_url|urlencode }}">Browse list</a>.
+            or use <a href="{{ widget.picker_url }}?field={{ widget.name }}&next={{ widget.next_url|urlencode }}">Browse list</a>.
         </p>
     </noscript>
 </div>

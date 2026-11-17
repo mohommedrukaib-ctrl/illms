@@ -107,16 +107,23 @@ def generate_food_safety_report(report_obj):
     story.append(Spacer(1, 8))
 
     # Tests
-    attached_tests = sample.attached_tests.filter(is_deleted=False).select_related("test_type", "operator")
+    attached_tests = sample.molecular_tests.filter(is_deleted=False).select_related("test_type", "operator")
     if attached_tests.exists():
         story.append(Paragraph("Laboratory Test Results", styles["ILIMSHeading"]))
         test_data = [["Test Name", "Outcome / Result", "Details / Value", "Date"]]
         for t in attached_tests:
+            # Get detection details from TestResult
+            results = t.results.filter(is_deleted=False)
+            detection_details = []
+            for r in results:
+                detection_details.append(f"{r.microorganism.name}: {r.get_detection_display()}")
+            details_str = "; ".join(detection_details) if detection_details else t.detection_summary
+            
             test_data.append([
-                t.test_type.name,
-                t.get_result_outcome_display(),
-                t.result_value or "—",
-                t.test_date.strftime("%Y-%m-%d"),
+                t.test_type.name if t.test_type else "N/A",
+                t.detection_summary,
+                details_str or "—",
+                t.run_date.strftime("%Y-%m-%d"),
             ])
         story.append(_make_table(test_data, col_widths=[5.5 * cm, 4 * cm, 4.4 * cm, 2.5 * cm]))
         story.append(Spacer(1, 8))

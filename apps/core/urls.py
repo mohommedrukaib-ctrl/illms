@@ -43,14 +43,12 @@ app_name = "core"
 urlpatterns = [
 
     path("", views.dashboard_view, name="dashboard"),
+    path("dashboard/", views.dashboard_view, name="dashboard"),
     path("theme/toggle/", views.theme_toggle_view, name="theme_toggle"),
     path("settings/", views.settings_hub_view, name="settings_hub"),
 
 
     # ─── CORE PORTAL & SYSTEM SETTINGS ───
-    path("", views.dashboard_view, name="dashboard"),
-    path("theme/toggle/", views.theme_toggle_view, name="theme_toggle"),
-    path("settings/", views.settings_hub_view, name="settings_hub"),
     path("recycle-bin/", views.recycle_bin_view, name="recycle_bin"),
     path("delete/", views.soft_delete_record, name="soft_delete"),
     path("docs/", views.documentation_view, name="documentation"),

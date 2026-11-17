@@ -4,50 +4,53 @@
 {% block title %}Set Up Two-Factor Authentication — {{ ILIMS_TITLE }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-center items-center" style="min-height: calc(100vh - 180px); padding: var(--space-md) 0;">
-    <div class="login-card" style="max-width: 480px; margin: 0 auto;">
-        <div class="login-header">
-            <div class="login-logo" aria-hidden="true">IL</div>
-            <h1 class="login-title">Set Up 2FA</h1>
-            <p class="login-subtitle">
-                Your role ({{ user.get_role_display }}) requires two-factor authentication.
+<div class="d-flex justify-center items-center" style="min-height: calc(100vh - 180px); padding: var(--space-md, 2rem) 0;">
+    <div class="login-card" style="max-width: 480px; margin: 0 auto; width: 100%;">
+        <div class="login-header text-center mb-lg">
+            <div class="login-logo" aria-hidden="true" style="margin: 0 auto 1rem auto; width: 48px; height: 48px; line-height: 48px; text-align: center; border-radius: 8px; background: var(--color-brand-primary, #2563eb); color: #fff; font-weight: bold;">IL</div>
+            <h1 class="login-title" style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Set Up 2FA</h1>
+            <p class="login-subtitle text-muted" style="font-size: 0.9rem;">
                 Scan the QR code or enter the secret key in your authenticator app.
             </p>
         </div>
 
         {% if messages %}
-        {% for message in messages %}
-        <div class="message message--{{ message.tags }} mb-md" role="alert">
-            <span>{{ message }}</span>
-        </div>
-        {% endfor %}
+            {% for message in messages %}
+            <div class="message message--{{ message.tags|default:'info' }} mb-md" role="alert">
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
         {% endif %}
 
-        <div class="text-center mb-lg">
-            <div class="qr-display" aria-label="QR code for authenticator app" style="margin: 0 auto;">
-                {{ qr_svg|safe }}
-            </div>
-            <p class="text-xs text-muted mt-sm mb-xs">
+        <div class="text-center mb-lg" style="text-align: center; margin-bottom: 1.5rem;">
+            {% if qr_svg %}
+                <div class="qr-display" aria-label="QR code for authenticator app" style="margin: 0 auto 1rem auto; display: flex; justify-content: center;">
+                    {{ qr_svg|safe }}
+                </div>
+            {% endif %}
+            <p class="text-xs text-muted mt-sm mb-xs" style="font-size: 0.85rem; color: #64748b;">
                 Scan with Google Authenticator, Authy, or 1Password.
             </p>
-            <div class="border rounded p-sm bg-card text-center mt-sm">
-                <span class="text-xs text-uppercase text-muted d-block mb-xs">Manual Secret Key</span>
-                <code class="text-mono text-brand text-bold" style="font-size: 1.1rem; letter-spacing: 2px;">{{ device.key }}</code>
+            {% if device.key %}
+            <div class="border rounded p-sm bg-card text-center mt-sm" style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; border: 1px solid #e2e8f0;">
+                <span class="text-xs text-uppercase text-muted d-block mb-xs" style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; display: block;">Manual Secret Key</span>
+                <code class="text-mono text-brand text-bold" style="font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; color: #2563eb; font-weight: bold;">{{ device.key }}</code>
             </div>
+            {% endif %}
         </div>
 
         <form method="post" action="{% url 'accounts:setup_2fa' %}" novalidate>
             {% csrf_token %}
 
-            <div class="form-group text-center">
-                <label for="id_otp_token" class="form-label form-label--required">
+            <div class="form-group text-center" style="margin-bottom: 1.5rem; text-align: center;">
+                <label for="id_otp_token" class="form-label form-label--required" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                     Enter the 6-digit code to confirm
                 </label>
                 <input type="text"
                        id="id_otp_token"
                        name="otp_token"
                        class="form-input form-input--code"
-                       style="margin: 0 auto;"
+                       style="margin: 0 auto; width: 100%; max-width: 240px; text-align: center; font-size: 1.25rem; letter-spacing: 4px; padding: 0.5rem;"
                        placeholder="000000"
                        autocomplete="one-time-code"
                        inputmode="numeric"
@@ -56,22 +59,102 @@
                        required
                        autofocus>
                 {% if form.otp_token.errors %}
-                <div class="form-error">
+                <div class="form-error" style="color: #dc2626; margin-top: 0.5rem;">
                     {% for error in form.otp_token.errors %}<p>{{ error }}</p>{% endfor %}
                 </div>
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md">
+            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md" style="width: 100%; padding: 0.75rem; background-color: #2563eb; color: #ffffff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
                 {% icon "check" "18" %}
                 Activate Two-Factor Authentication
             </button>
         </form>
 
-        <div class="text-center mt-lg">
+        <div class="text-center mt-lg" style="margin-top: 1rem; text-align: center;">
             <form method="post" action="{% url 'accounts:logout' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn--ghost text-sm">
+                <button type="submit" class="btn btn--ghost text-sm" style="background: none; border: none; color: #64748b; cursor: pointer; text-decoration: underline;">
+                    Cancel and sign out
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block auth_content %}
+<div class="d-flex justify-center items-center" style="min-height: calc(100vh - 180px); padding: var(--space-md, 2rem) 0;">
+    <div class="login-card" style="max-width: 480px; margin: 0 auto; width: 100%;">
+        <div class="login-header text-center mb-lg">
+            <div class="login-logo" aria-hidden="true" style="margin: 0 auto 1rem auto; width: 48px; height: 48px; line-height: 48px; text-align: center; border-radius: 8px; background: var(--color-brand-primary, #2563eb); color: #fff; font-weight: bold;">IL</div>
+            <h1 class="login-title" style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Set Up 2FA</h1>
+            <p class="login-subtitle text-muted" style="font-size: 0.9rem;">
+                Scan the QR code or enter the secret key in your authenticator app.
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="message message--{{ message.tags|default:'info' }} mb-md" role="alert">
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="text-center mb-lg" style="text-align: center; margin-bottom: 1.5rem;">
+            {% if qr_svg %}
+                <div class="qr-display" aria-label="QR code for authenticator app" style="margin: 0 auto 1rem auto; display: flex; justify-content: center;">
+                    {{ qr_svg|safe }}
+                </div>
+            {% endif %}
+            <p class="text-xs text-muted mt-sm mb-xs" style="font-size: 0.85rem; color: #64748b;">
+                Scan with Google Authenticator, Authy, or 1Password.
+            </p>
+            {% if device.key %}
+            <div class="border rounded p-sm bg-card text-center mt-sm" style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; border: 1px solid #e2e8f0;">
+                <span class="text-xs text-uppercase text-muted d-block mb-xs" style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; display: block;">Manual Secret Key</span>
+                <code class="text-mono text-brand text-bold" style="font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; color: #2563eb; font-weight: bold;">{{ device.key }}</code>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="post" action="{% url 'accounts:setup_2fa' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group text-center" style="margin-bottom: 1.5rem; text-align: center;">
+                <label for="id_otp_token" class="form-label form-label--required" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Enter the 6-digit code to confirm
+                </label>
+                <input type="text"
+                       id="id_otp_token"
+                       name="otp_token"
+                       class="form-input form-input--code"
+                       style="margin: 0 auto; width: 100%; max-width: 240px; text-align: center; font-size: 1.25rem; letter-spacing: 4px; padding: 0.5rem;"
+                       placeholder="000000"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       pattern="[0-9]{6}"
+                       maxlength="6"
+                       required
+                       autofocus>
+                {% if form.otp_token.errors %}
+                <div class="form-error" style="color: #dc2626; margin-top: 0.5rem;">
+                    {% for error in form.otp_token.errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg mt-md" style="width: 100%; padding: 0.75rem; background-color: #2563eb; color: #ffffff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                {% icon "check" "18" %}
+                Activate Two-Factor Authentication
+            </button>
+        </form>
+
+        <div class="text-center mt-lg" style="margin-top: 1rem; text-align: center;">
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--ghost text-sm" style="background: none; border: none; color: #64748b; cursor: pointer; text-decoration: underline;">
                     Cancel and sign out
                 </button>
             </form>

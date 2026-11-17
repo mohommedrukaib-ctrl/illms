@@ -4,10 +4,7 @@
         <div class="modal__header">
             <h2 class="modal__title">{{ modal_title|default:"Register New Client" }}</h2>
 
-            <button type="button" class="modal__close" aria-label="Close modal" onclick="document.getElementById('modal-host').innerHTML='';">
-=======
             <button type="button" class="modal__close" aria-label="Close modal" data-close-modal>
-
                 {% icon "close" "20" %}
             </button>
         </div>
@@ -24,10 +21,10 @@
                 {% endif %}
 
                 <div class="form-group">
-    <label class="form-label form-label--required">Company / Client Name</label>
-    {{ form.name }}
-    {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
-</div>
+                    <label class="form-label form-label--required">Company / Client Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
 
                 <div class="d-grid gap-md" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
@@ -66,11 +63,7 @@
             </div>
 
             <div class="modal__footer">
-
-                <button type="button" class="btn btn--secondary" onclick="document.getElementById('modal-host').innerHTML='';">Cancel</button>
-=======
                 <button type="button" class="btn btn--secondary" data-close-modal>Cancel</button>
-
                 <button type="submit" class="btn btn--primary">{% icon "check" "18" %} Save Client</button>
             </div>
         </form>

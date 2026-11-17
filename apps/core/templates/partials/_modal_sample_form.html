@@ -4,10 +4,7 @@
         <div class="modal__header">
             <h2 class="modal__title">{{ modal_title|default:"Register Product / Sample" }}</h2>
 
-            <button type="button" class="modal__close" onclick="document.getElementById('modal-host').innerHTML=''">
-=======
             <button type="button" class="modal__close" data-close-modal>
-
                 {% icon "close" "20" %}
             </button>
         </div>
@@ -20,16 +17,10 @@
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next_url }}">
             <input type="hidden" name="return_to" value="{{ return_to|default:'' }}">
-
-=======
-                        {% csrf_token %}
-            <input type="hidden" name="next" value="{{ next_url }}">
-            <input type="hidden" name="return_to" value="{{ return_to|default:'' }}">
             {% if edit_pk %}
                 <input type="hidden" name="edit" value="{{ edit_pk }}">
             {% endif %}
 
-            
 
             <div class="modal__body">
                 {% if form.errors %}
@@ -120,15 +111,12 @@
 
             <div class="modal__footer">
                 <button type="button" class="btn btn--secondary"
-
-                        onclick="document.getElementById('modal-host').innerHTML=''">Cancel</button>
-=======
                         data-close-modal>Cancel</button>
 
                 <button type="submit" class="btn btn--primary">
                     {% icon "check" "18" %}
                     {% if return_to == 'dna' or return_to == 'test' %}
-                        Save Sample &amp; Continue
+                        Save Sample & Continue
                     {% else %}
                         Register Sample
                     {% endif %}

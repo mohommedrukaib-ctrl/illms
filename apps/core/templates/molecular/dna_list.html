@@ -22,7 +22,6 @@
             
             <select name="status" class="form-input" style="max-width:180px;">
                 <option value="">All statuses</option>
-                <!-- FIXED: Iterate over dynamic objects -->
                 {% for s in statuses %}
                 <option value="{{ s.pk }}" {% if current_status == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
                 {% endfor %}
@@ -32,12 +31,7 @@
     </div>
     <div class="table-container">
         <table class="table">
-
-            <thead><tr><th>Code</th><th>Sample</th><th>Method</th><th>Date</th><th>Operator</th><th>Status</th><th></th></tr></thead>
-            <!-- The tbody that gets swapped by live Ajax -->
-=======
             <thead><tr><th>Code</th><th>Sample</th><th>Method</th><th>Date</th><th>Operator</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
-
             <tbody id="dna-tbody">{% include "molecular/partials/_dna_list_rows.html" %}</tbody>
         </table>
     </div>

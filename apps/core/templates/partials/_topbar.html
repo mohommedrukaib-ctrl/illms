@@ -1,114 +1,47 @@
 {% load static ilims_tags %}
 <header class="topbar" role="banner">
     <!-- Mobile hamburger -->
-    <button id="sidebar-toggle"
-            class="topbar__hamburger"
-            type="button"
-            aria-label="Toggle navigation menu"
-            aria-expanded="false">
+    <button id="sidebar-toggle" class="topbar__hamburger" type="button" aria-label="Toggle navigation menu" aria-expanded="false">
         {% icon "menu" "24" %}
     </button>
 
     <!-- Search -->
     <div class="topbar__search">
-
-        <form action="{% url 'core:dashboard' %}" method="get" role="search">
-=======
         <form action="{% url 'core:global_search' %}" method="get" role="search">
-
             <span class="topbar__search-icon" aria-hidden="true">{% icon "search" "16" %}</span>
-            <input type="search"
-                   name="q"
-                   class="topbar__search-input"
-                   placeholder="Find a page…"
-                   aria-label="Global search"
-                   autocomplete="off">
+            <input type="search" name="q" class="topbar__search-input" placeholder="Find a page…" aria-label="Global search" autocomplete="off">
         </form>
     </div>
 
     <!-- Actions -->
     <div class="topbar__actions">
         <!-- Print -->
-
-        <a href="javascript:void(0)"
-           class="topbar__btn"
-           aria-label="Print page"
-           onclick="window.print();return false;">
-            {% icon "print" "20" %}
-        </a>
-
-        <!-- Fullscreen (noop without JS, graceful) -->
-=======
-        <a href="#"
-           class="topbar__btn"
-           aria-label="Print page"
-           data-action="print">
+        <a href="javascript:void(0)" class="topbar__btn" aria-label="Print page" onclick="window.print();return false;">
             {% icon "print" "20" %}
         </a>
 
         <!-- Fullscreen -->
-
-        <button type="button"
-                class="topbar__btn"
-                aria-label="Toggle fullscreen"
-                title="Fullscreen">
+        <button type="button" class="topbar__btn" aria-label="Toggle fullscreen" title="Fullscreen" onclick="if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); }">
             {% icon "fullscreen" "20" %}
         </button>
 
-
-        <!-- Theme toggle — works without JS via POST form -->
-        {% include "partials/_theme_toggle.html" %}
-
-        <a href="{% url 'core:settings_hub' %}"
-        class="topbar__btn"
-        aria-label="Settings">
-            {% icon "settings" "20" %}
-        </a>
-
-        <a href="{% url 'core:smart_select_demo' %}"
-   class="topbar__btn"
-   aria-label="SmartSelect demo"
-   title="SmartSelect demo">
-    {% icon "search" "20" %}
-</a>
-        <!-- Notifications -->
-        <a href="{% url 'core:dashboard' %}"
-           class="topbar__btn"
-           aria-label="Notifications"
-           title="Notifications">
-            {% icon "bell" "20" %}
-            {# Badge — will be dynamic in Phase 8 #}
-            {# <span class="topbar__badge" aria-label="3 unread">3</span> #}
-        </a>
-
-=======
         <!-- Theme toggle -->
         {% include "partials/_theme_toggle.html" %}
 
         <!-- Settings -->
-        <a href="{% url 'core:settings_hub' %}"
-           class="topbar__btn"
-           aria-label="Settings"
-           title="Settings">
+        <a href="{% url 'core:settings_hub' %}" class="topbar__btn" aria-label="Settings" title="Settings">
             {% icon "settings" "20" %}
         </a>
 
         <!-- SmartSelect Demo -->
-        <a href="{% url 'core:smart_select_demo' %}"
-           class="topbar__btn"
-           aria-label="SmartSelect demo"
-           title="SmartSelect demo">
+        <a href="{% url 'core:smart_select_demo' %}" class="topbar__btn" aria-label="SmartSelect demo" title="SmartSelect demo">
             {% icon "search" "20" %}
         </a>
 
-        <!-- Notifications Bell + Dropdown Container -->
-        <div id="bell-container"
-             hx-get="{% url 'core:notification_poll' %}"
-             hx-trigger="load, every 45s, ilims:refresh from:body"
-             hx-swap="innerHTML">
+        <!-- Notifications Bell -->
+        <div id="bell-container" hx-get="{% url 'core:notification_poll' %}" hx-trigger="load, every 45s, ilims:refresh from:body" hx-swap="innerHTML">
             {% include "reminders/partials/_bell_dropdown.html" %}
         </div>
-
 
         <!-- User menu -->
         <a href="{% url 'accounts:profile' %}" class="topbar__user" title="Profile">
@@ -122,10 +55,7 @@
         </a>
 
         <!-- Logout -->
-        <a href="{% url 'accounts:logout' %}"
-           class="topbar__btn"
-           aria-label="Log out"
-           title="Log out">
+        <a href="{% url 'accounts:logout' %}" class="topbar__btn" aria-label="Log out" title="Log out">
             {% icon "logout" "20" %}
         </a>
     </div>

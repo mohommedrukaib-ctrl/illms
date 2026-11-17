@@ -1,57 +1,49 @@
+"""
+Core application context processors for ILIMS.
+"""
 from django.conf import settings
-
-from apps.core.models import FeatureFlag, SystemSetting
-
 from apps.core.models import FeatureFlag, SystemSetting, Notification
 
 
-
 def ilims_context(request):
+    """
+    Global template context processor providing system settings, feature flags,
+    theme preferences, and user notification counters.
+    """
     theme = request.COOKIES.get("ilims_theme", "light")
-    settings_obj = SystemSetting.get_settings()
-
     
-    # Get all flags for UI filtering
-    flags_dict = {}
-    if request.user.is_authenticated:
-        try:
-            flags = FeatureFlag.objects.all()
-            for f in flags:
-
+    # Safe fetch for system settings
+    try:
+        settings_obj = SystemSetting.get_settings()
+    except Exception:
+        settings_obj = None
 
     flags_dict = {}
     latest = []
     unread_count = 0
 
-    if getattr(request, "user", None) and request.user.is_authenticated:
+    user = getattr(request, "user", None)
+    if user and user.is_authenticated:
+        # Load feature flags
         try:
             for f in FeatureFlag.objects.all():
-
-                flags_dict[f.key.replace(".", "_")] = f.enabled
+                key = f.key.replace(".", "_") if hasattr(f, "key") and f.key else f"flag_{f.pk}"
+                flags_dict[key] = f.enabled
         except Exception:
             pass
 
-
-    return {
-        "ILIMS_VERSION": settings.ILIMS_VERSION,
-        "ILIMS_TITLE": settings.ILIMS_TITLE,
-        "ILIMS_SUBTITLE": settings.ILIMS_SUBTITLE,
-        "current_theme": theme,
-        "ROLE_CHOICES": settings.ROLE_CHOICES,
-        "system_settings": settings_obj,
-        "features": flags_dict,
-
+        # Load notifications
         try:
-            notif_qs = Notification.objects.filter(user=request.user).order_by("-created_at")
+            notif_qs = Notification.objects.filter(user=user).order_by("-created_at")
             unread_count = notif_qs.filter(is_read=False).count()
             latest = list(notif_qs[:3])
         except Exception:
             pass
 
     return {
-        "ILIMS_VERSION": getattr(settings, "ILIMS_VERSION", ""),
+        "ILIMS_VERSION": getattr(settings, "ILIMS_VERSION", "1.0.0"),
         "ILIMS_TITLE": getattr(settings, "ILIMS_TITLE", "ILIMS"),
-        "ILIMS_SUBTITLE": getattr(settings, "ILIMS_SUBTITLE", ""),
+        "ILIMS_SUBTITLE": getattr(settings, "ILIMS_SUBTITLE", "Laboratory Information Management System"),
         "current_theme": theme,
         "ROLE_CHOICES": getattr(settings, "ROLE_CHOICES", []),
         "system_settings": settings_obj,
@@ -59,5 +51,4 @@ def ilims_context(request):
         "latest": latest,
         "unread": latest,
         "unread_count": unread_count,
-
     }

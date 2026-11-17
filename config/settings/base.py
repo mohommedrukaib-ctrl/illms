@@ -7,17 +7,19 @@ from pathlib import Path
 import dj_database_url
 
 # ──────────────────────────────────────────────
-# PATHS
+# PATHS & ENVIRONMENT
 # ──────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = BASE_DIR / "apps"
+IS_VERCEL = "VERCEL" in os.environ
 
 # Ensure logs directory exists for local logging
-LOGS_DIR = Path("/tmp/logs") if os.environ.get("VERCEL") else (BASE_DIR / "logs")
+LOGS_DIR = Path("/tmp/logs") if IS_VERCEL else (BASE_DIR / "logs")
 try:
     LOGS_DIR.mkdir(exist_ok=True, parents=True)
 except OSError:
     pass
+
 # ──────────────────────────────────────────────
 # CORE DJANGO
 # ──────────────────────────────────────────────
@@ -292,15 +294,14 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
 # ──────────────────────────────────────────────
-# LOGGING
+# LOGGING (Serverless-Safe Console Logging)
 # ──────────────────────────────────────────────
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
+            "format": "[%(asctime)s] %(levelname)s %(name)s: %(message)s",
         },
     },
     "handlers": {
@@ -308,29 +309,35 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs" / "ilims.log",
-            "formatter": "verbose",
-        },
     },
     "root": {
-        "handlers": ["console"] if DEBUG else ["console", "file"],
+        "handlers": ["console"],
         "level": "INFO",
     },
     "loggers": {
         "django": {
-            "handlers": ["console"] if DEBUG else ["console", "file"],
-            "level": "WARNING",
+            "handlers": ["console"],
+            "level": "INFO",
             "propagate": False,
         },
         "apps": {
-            "handlers": ["console"] if DEBUG else ["console", "file"],
+            "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
     },
 }
+
+if not IS_VERCEL:
+    try:
+        LOGGING["handlers"]["file"] = {
+            "class": "logging.FileHandler",
+            "filename": LOGS_DIR / "ilims.log",
+            "formatter": "verbose",
+        }
+        LOGGING["root"]["handlers"].append("file")
+    except Exception:
+        pass
 
 # ──────────────────────────────────────────────
 # ILIMS CUSTOM
