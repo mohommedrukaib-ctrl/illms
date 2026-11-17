@@ -3,23 +3,12 @@
   "builds": [
     {
       "src": "config/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxDuration": 15
-      }
-    },
-    {
-      "src": "build.sh",
-      "use": "@vercel/bash"
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "(.*)",
+      "src": "/(.*)",
       "dest": "config/wsgi.py"
     }
   ]
