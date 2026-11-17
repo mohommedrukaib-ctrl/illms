@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+{% load ilims_tags %}
+
+{% block title %}{{ page_title }} — iLIMS{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Dashboard-specific styles */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: var(--space-lg);
+  }
+
+  @media (max-width: 1200px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .dashboard-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  /* Throughput Chart (Pure SVG) */
+  .throughput-chart {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-lg);
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  .chart-bar {
+    transition: fill var(--transition-fast);
+    cursor: pointer;
+  }
+
+  .chart-bar:hover {
+    fill: var(--brand-deep);
+  }
+
+  .chart-bar-label {
+    font-size: 0.6875rem;
+    fill: var(--text-muted);
+    text-anchor: middle;
+  }
+
+  .chart-bar-value {
+    font-size: 0.6875rem;
+    fill: var(--text-primary);
+    text-anchor: middle;
+    font-weight: 600;
+  }
+
+  .chart-y-label {
+    font-size: 0.625rem;
+    fill: var(--text-muted);
+    text-anchor: end;
+  }
+
+  /* Pathogen Distribution */
+  .pathogen-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .pathogen-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+  }
+
+  .pathogen-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pathogen-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pathogen-code {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .pathogen-bar-wrap {
+    width: 120px;
+    flex-shrink: 0;
+  }
+
+  .pathogen-bar-bg {
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .pathogen-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--brand);
+    transition: width var(--transition-base);
+  }
+
+  .pathogen-count {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Action Cards */
+  .action-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  @media (max-width: 768px) {
+    .action-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .action-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-fast);
+  }
+
+  .action-card:hover {
+    border-color: var(--brand);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: inherit;
+    transform: translateY(-2px);
+  }
+
+  .action-card__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+  }
+
+  .action-card--primary .action-card__icon {
+    background: var(--brand-light);
+    color: var(--brand);
+  }
+
+  .action-card--secondary .action-card__icon {
+    background: var(--info-light);
+    color: var(--info);
+  }
+
+  .action-card--success .action-card__icon {
+    background: var(--ok-light);
+    color: var(--ok);
+  }
+
+  .action-card--warn .action-card__icon {
+    background: var(--warn-light);
+    color: var(--warn);
+  }
+
+  .action-card__title {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .action-card__desc {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* Lists in sidebar cards */
+  .sidebar-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .sidebar-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar-list-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .sidebar-list-item__icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+  }
+
+  .sidebar-list-item__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sidebar-list-item__title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-list-item__meta {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .sidebar-list-item__status {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--border-radius-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Empty state */
+  .empty-state-sm {
+    text-align: center;
+    padding: var(--space-lg);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .empty-state-sm .icon {
+    margin-bottom: var(--space-sm);
+    opacity: 0.5;
+  }
+
+  /* Quick stats row */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+  }
+
+  @media (max-width: 768px) {
+    .quick-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .quick-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-md);
+    text-align: center;
+  }
+
+  .quick-stat__value {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    font-family: var(--font-mono);
+  }
+
+  .quick-stat__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-header__left">
+      <div class="page-header__icon">
+        {% icon page_icon|default:"dashboard" size="24" %}
+      </div>
+      <div class="page-header__text">
+        <h1>{{ page_title|default:"Operations Dashboard" }}</h1>
+        <p>{{ page_subtitle|default:"Real-time laboratory workflow, diagnostics & quality metrics" }}</p>
+      </div>
+    </div>
+    <div class="page-header__right">
+      <a href="{% url 'core:sample_create' %}" class="btn btn--primary">
+        {% icon "plus" size="16" %} New Sample
+      </a>
+    </div>
+  </header>
+
+  <!-- Quick Stats Row -->
+  <div class="quick-stats">
+    <div class="quick-stat">
+      <div class="quick-stat__value">{{ stats.active_samples|default:0 }}</div>
+      <div class="quick-stat__label">Active Samples</div>
+    </div>
+    <div class="quick-stat">
+      <div class="quick-stat__value">{{ stats.testing_count|default:0 }}</div>
+      <div class="quick-stat__label">In Testing</div>
+    </div>
+    <div class="quick-stat">
+      <div class="quick-stat__value">{{ stats.total_clients|default:0 }}</div>
+      <div class="quick-stat__label">Total Clients</div>
+    </div>
+    <div class="quick-stat">
+      <div class="quick-stat__value">{{ stats.monthly_tests|default:0 }}</div>
+      <div class="quick-stat__label">Tests This Month</div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Grid -->
+  <div class="dashboard-grid">
+    <!-- Left Column: Charts & Main Data -->
+    <main class="dashboard-main">
+      <!-- Throughput Chart -->
+      <section class="throughput-chart">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg);">
+          <h2 class="card__title" style="margin: 0;">Monthly Sample Throughput</h2>
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted);">{{ chart_bars|length }} months</span>
+        </div>
+
+        <svg class="chart-svg" viewBox="0 0 550 170" role="img" aria-label="Monthly sample throughput chart">
+          <!-- Y-axis labels and grid lines -->
+          {% if max_bar_count and max_bar_count > 0 %}
+          <g>
+            {% for i in "12345"|make_list %}
+              {% with y_pos=130|add:i|add:-26|floatformat:0 %}
+                <line x1="35" y1="{{ y_pos }}" x2="515" y2="{{ y_pos }}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="4,4"/>
+                <text x="30" y="{{ y_pos }}" class="chart-y-label" dominant-baseline="middle">{% widthratio max_bar_count 5 i %}</text>
+              {% endwith %}
+            {% endfor %}
+          </g>
+          {% endif %}
+
+          <!-- Bars -->
+          {% for bar in chart_bars %}
+          <g>
+            <rect class="chart-bar"
+                  x="{{ bar.x }}"
+                  y="{{ bar.y }}"
+                  width="{{ bar.width }}"
+                  height="{{ bar.height }}"
+                  fill="var(--brand)"
+                  rx="2"
+                  ry="2"/>
+            <text class="chart-bar-label"
+                  x="{{ bar.x|add:bar.width|div:2 }}"
+                  y="150"
+                  dominant-baseline="text-before-edge">{{ bar.label }}</text>
+            {% if bar.count > 0 %}
+            <text class="chart-bar-value"
+                  x="{{ bar.x|add:bar.width|div:2 }}"
+                  y="{{ bar.y|add:-4 }}"
+                  dominant-baseline="text-after-edge">{{ bar.count }}</text>
+            {% endif %}
+          </g>
+          {% endfor %}
+
+          <!-- X-axis -->
+          <line x1="35" y1="130" x2="515" y2="130" stroke="var(--border-color)" stroke-width="1"/>
+        </svg>
+      </section>
+
+      <!-- Pathogen Distribution & Recent Detections -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+        <!-- Pathogen Distribution -->
+        <section class="card">
+          <div class="card__header">
+            <h2 class="card__title">Pathogen Distribution</h2>
+            <span style="font-size: var(--font-size-xs); color: var(--text-muted);">{{ total_detections|default:0 }} total detections</span>
+          </div>
+          <div class="card__body">
+            {% if top_pathogens %}
+              <div class="pathogen-list">
+                {% for pathogen in top_pathogens %}
+                <div class="pathogen-item">
+                  <div class="pathogen-info">
+                    <div class="pathogen-name">{{ pathogen.name }}</div>
+                    <div class="pathogen-code">{{ pathogen.code }}</div>
+                  </div>
+                  <div class="pathogen-bar-wrap">
+                    <div class="pathogen-bar-bg">
+                      <div class="pathogen-bar-fill" style="width: {{ pathogen.percent }}%;"></div>
+                    </div>
+                  </div>
+                  <div class="pathogen-count">{{ pathogen.count }}</div>
+                </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state-sm">
+                {% icon "search" size="32" %}
+                <p>No pathogen detections recorded yet</p>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+
+        <!-- Recent Detections -->
+        <section class="card">
+          <div class="card__header">
+            <h2 class="card__title">Recent Detections</h2>
+            <a href="{% url 'core:labtest_list' %}" class="btn btn--ghost btn--sm">View All</a>
+          </div>
+          <div class="card__body" style="padding-top: 0;">
+            {% if recent_detections %}
+              <div class="sidebar-list">
+                {% for result in recent_detections %}
+                <div class="sidebar-list-item">
+                  <div class="sidebar-list-item__icon" style="background: var(--danger-light); color: var(--danger);">
+                    {% icon "alert-triangle" size="14" %}
+                  </div>
+                  <div class="sidebar-list-item__content">
+                    <div class="sidebar-list-item__title">{{ result.microorganism.name }}</div>
+                    <div class="sidebar-list-item__meta">
+                      Sample {{ result.test.sample.sample_id }} • {{ result.test.created_at|date:"M d, H:i" }}
+                    </div>
+                  </div>
+                  <span class="sidebar-list-item__status" style="background: var(--danger-light); color: var(--danger);">
+                    DETECTED
+                  </span>
+                </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state-sm">
+                {% icon "check-circle" size="32" %}
+                <p>No recent detections</p>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+
+      <!-- Recent Samples -->
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">Recent Samples</h2>
+          <a href="{% url 'core:sample_list' %}" class="btn btn--ghost btn--sm">View All</a>
+        </div>
+        <div class="card__body" style="padding-top: 0;">
+          {% if recent_samples %}
+            <div style="overflow-x: auto;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Sample ID</th>
+                    <th>Client</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Received</th>
+                    <th>Due Date</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sample in recent_samples %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'core:sample_detail' sample.pk %}" style="font-family: var(--font-mono); font-weight: 600; color: var(--text-primary);">
+                        {{ sample.sample_id }}
+                      </a>
+                    </td>
+                    <td>{{ sample.client.name }}</td>
+                    <td>{{ sample.get_sample_type_display }}</td>
+                    <td>
+                      <span class="status-badge status-badge--{{ sample.workflow_state|status_color }}">
+                        {{ sample.get_workflow_state_display }}
+                      </span>
+                    </td>
+                    <td>{{ sample.created_at|date:"M d, Y" }}</td>
+                    <td>
+                      {% if sample.due_date %}
+                        <span style="color: {% if sample.due_date < today %}var(--danger){% elif sample.due_date == today %}var(--warn){% else %}var(--text-secondary){% endif %};">
+                          {{ sample.due_date|date:"M d" }}
+                        </span>
+                      {% else %}
+                        <span style="color: var(--text-muted);">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'core:sample_detail' sample.pk %}" class="btn btn--ghost btn--sm" style="padding: 4px 8px;">
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="empty-state-sm">
+              {% icon "inbox" size="32" %}
+              <p>No samples recorded yet</p>
+              <a href="{% url 'core:sample_create' %}" class="btn btn--primary btn--sm" style="margin-top: var(--space-sm);">Create First Sample</a>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+    </main>
+
+    <!-- Right Column: Action Cards & Side Stacks -->
+    <aside class="dashboard-sidebar">
+      <!-- Quick Actions -->
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">Quick Actions</h2>
+        </div>
+        <div class="card__body" style="padding-top: 0;">
+          <div class="action-cards">
+            <a href="{% url 'core:sample_create' %}" class="action-card action-card--primary">
+              <div class="action-card__icon">
+                {% icon "plus-circle" size="20" %}
+              </div>
+              <div class="action-card__title">Log New Sample</div>
+              <div class="action-card__desc">Register a new sample into the workflow</div>
+            </a>
+
+            <a href="{% url 'core:client_create' %}" class="action-card action-card--secondary">
+              <div class="action-card__icon">
+                {% icon "user-plus" size="20" %}
+              </div>
+              <div class="action-card__title">Add Client</div>
+              <div class="action-card__desc">Create a new client record</div>
+            </a>
+
+            <a href="{% url 'core:test_create' %}" class="action-card action-card--success">
+              <div class="action-card__icon">
+                {% icon "flask-conical" size="20" %}
+              </div>
+              <div class="action-card__title">Record Test Run</div>
+              <div class="action-card__desc">Log PCR/molecular test results</div>
+            </a>
+
+            <a href="{% url 'core:batch_list' %}" class="action-card action-card--warn">
+              <div class="action-card__icon">
+                {% icon "package" size="20" %}
+              </div>
+              <div class="action-card__title">Manage Batches</div>
+              <div class="action-card__desc">View and create sample batches</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Today's Reminders -->
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">Today's Reminders</h2>
+          <a href="{% url 'core:reminders_list' %}" class="btn btn--ghost btn--sm">View All</a>
+        </div>
+        <div class="card__body" style="padding-top: 0;">
+          {% if today_reminders %}
+            <div class="sidebar-list">
+              {% for reminder in today_reminders %}
+              <div class="sidebar-list-item">
+                <div class="sidebar-list-item__icon" style="background: var(--warn-light); color: var(--warn);">
+                  {% icon "bell" size="14" %}
+                </div>
+                <div class="sidebar-list-item__content">
+                  <div class="sidebar-list-item__title">{{ reminder.title }}</div>
+                  <div class="sidebar-list-item__meta">
+                    {% if reminder.sample %}Sample {{ reminder.sample.sample_id }}{% else %}General{% endif %}
+                    {% if reminder.assigned_to %} • {{ reminder.assigned_to.get_full_name|default:reminder.assigned_to.username }}{% endif %}
+                  </div>
+                </div>
+                {% if not reminder.is_done %}
+                  <form method="post" action="{% url 'reminder_toggle' reminder.pk %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm" style="padding: 2px 8px; font-size: var(--font-size-xs);">Done</button>
+                  </form>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state-sm">
+              {% icon "bell-off" size="32" %}
+              <p>No reminders for today</p>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Overdue Samples -->
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">Overdue Samples</h2>
+          <a href="{% url 'core:sample_list' %}?status=overdue" class="btn btn--ghost btn--sm">View All</a>
+        </div>
+        <div class="card__body" style="padding-top: 0;">
+          {% if overdue_samples %}
+            <div class="sidebar-list">
+              {% for sample in overdue_samples %}
+              <div class="sidebar-list-item">
+                <div class="sidebar-list-item__icon" style="background: var(--danger-light); color: var(--danger);">
+                  {% icon "alert-circle" size="14" %}
+                </div>
+                <div class="sidebar-list-item__content">
+                  <div class="sidebar-list-item__title">{{ sample.sample_id }}</div>
+                  <div class="sidebar-list-item__meta">{{ sample.client.name }} • Due {{ sample.due_date|date:"M d" }}</div>
+                </div>
+                <span class="sidebar-list-item__status" style="background: var(--danger-light); color: var(--danger);">
+                  OVERDUE
+                </span>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state-sm">
+              {% icon "check-circle" size="32" %}
+              <p>No overdue samples</p>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

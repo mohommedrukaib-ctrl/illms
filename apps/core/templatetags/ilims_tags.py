@@ -102,3 +102,12 @@ def feature_filter(key):
     """Template filter to safely check feature flags: {% if 'module.batches'|feature %}...{% endif %}"""
     from apps.core.models import flag_enabled
     return flag_enabled(key)
+
+
+@register.filter(name="div")
+def div_filter(value, arg):
+    """Divide value by arg. Usage: {{ value|div:arg }}"""
+    try:
+        return float(value) / float(arg)
+    except (ValueError, ZeroDivisionError):
+        return 0

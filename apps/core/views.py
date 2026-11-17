@@ -131,7 +131,7 @@ def dashboard_view(request):
                 "percent": pct,
             })
 
-    return render(request, "pages/placeholder.html", {
+    return render(request, "pages/dashboard.html", {
         "page_title": "Operations Dashboard",
         "page_subtitle": "Real-time laboratory workflow, diagnostics & quality metrics",
         "page_icon": "dashboard",
